@@ -7,10 +7,7 @@
     <port>12345</port>
 
     <datanodes>
-        <datanode>
-            <host>localhost</host>
-            <port>54321</port>
-        </datanode>
+        <name>DataNode1</name>
     </datanodes>
 
 </namennode>

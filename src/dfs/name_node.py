@@ -1,6 +1,8 @@
 import Pyro4
 import utils
 import dfile
+import sys
+import traceback
 
 class File:
     def __init__(self, nodename, filename):
@@ -32,12 +34,29 @@ class NameNode:
         f = self.files.get(filename)
         if f is None:
             return False
-        datanode = Pyro4.Proxy(''.join(['PYRONAME:', f.nodename]))
+        datanode = utils.retrieve_object(f.nodename)
         return dfile.DFile(f.filename, datanode)
+
+    def health_check(self):
+        pass
+        '''
+        for info in self.conf['datanodes']:
+            print info
+            node = utils.retrieve_object(info['name'])
+
+            try:
+                node.heart_beat()
+            except:
+                traceback.print_exc()
+        '''
+
 
 if __name__ == '__main__':
     node = NameNode('name_node.xml')
     f = File('DataNode1', 'data_node.xml')
     node.files = { 'xml': f }
+    node.health_check()
+    '''
     f = node.get_file('xml')
     print f.read(0, 100)
+    '''
