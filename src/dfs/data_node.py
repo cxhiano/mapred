@@ -6,6 +6,7 @@ class DataNode:
 
     def __init__(self, conf):
         self.conf = utils.load_config(conf)
+        self.files = {}
 
     def run(self):
         Pyro4.Daemon.serveSimple(
@@ -21,10 +22,15 @@ class DataNode:
     def delete_file(self, filename):
         pass
 
-    def read_file(self, filename, offset, bytes):
-        pass
+    def read_file(self, filename, offset, nbytes):
+        try:
+            f = open(filename, 'r')
+            f.seek(offset)
+            return f.read(nbytes)
+        except IOError:
+            return False
 
-    def write_file(self, buf, offset, bytes):
+    def write_file(self, buf, offset, nbytes):
         pass
 
     def heart_beat(self):
@@ -32,3 +38,4 @@ class DataNode:
 
 if __name__ == '__main__':
     node = DataNode('data_node.xml')
+    node.run()
