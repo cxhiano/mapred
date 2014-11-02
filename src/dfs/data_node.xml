@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<namennode>
+    <name>DataNode1</name>
+
+    <host>localhost</host>
+
+    <port>54321</port>
+
+</namennode>
