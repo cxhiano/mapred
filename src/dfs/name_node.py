@@ -1,11 +1,19 @@
 import Pyro4
+import utils
 
 class NameNode:
-    """The name node of distributed file system """
+    """ The name node of distributed file system """
+
+    def __init__(self, name):
+        self.name = name
 
     def run(self):
-        daemon = Pyro4.Daemon()
-        ns = Pyro4.locateNS()
+        Pyro4.Daemon.serveSimple(
+            {
+                self: self.name
+            },
+            port=12345,
+            ns=True)
 
     def create_file(self, filename):
         pass
