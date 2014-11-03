@@ -1,7 +1,7 @@
-from src.lib.mapred import MapRed
+from lib.mapred import MapRed
 import re
 
-class WordCound(MapRed):
+class WordCount(MapRed):
     def __init__(self):
         self.prev = None
         self.count = 0

@@ -3,6 +3,7 @@ import utils
 import dfile
 import sys
 import traceback
+import thread
 
 class File:
     def __init__(self, nodename, filename):
@@ -16,7 +17,12 @@ class NameNode:
         self.conf = utils.load_config(conf)
         self.files = {}
 
+    def run_pyro_naming_server(self):
+        Pyro4.naming.startNSloop()
+
     def run(self):
+        thread.start_new_thread(self.run_pyro_naming_server, tuple())
+
         Pyro4.Daemon.serveSimple(
             {
                 self: self.conf['name']
@@ -34,8 +40,7 @@ class NameNode:
         f = self.files.get(filename)
         if f is None:
             return False
-        datanode = utils.retrieve_object(f.nodename)
-        return dfile.DFile(f.filename, datanode)
+        return utils.retrieve_object(f.nodename)
 
     def health_check(self):
         pass
@@ -55,8 +60,9 @@ if __name__ == '__main__':
     node = NameNode('name_node.xml')
     f = File('DataNode1', 'data_node.xml')
     node.files = { 'xml': f }
-    node.health_check()
+    node.run()
     '''
+    node.health_check()
     f = node.get_file('xml')
     print f.read(0, 100)
     '''
