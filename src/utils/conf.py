@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-import Pyro4
 
 def _xml2dict(node, dict_):
     """ Recursively transform a xml element tree rooted at node to a dict """
@@ -17,6 +16,3 @@ def load_config(filename):
     tree = ET.parse(filename)
     _xml2dict(tree.getroot(), conf)
     return conf
-
-def retrieve_object(name):
-    return Pyro4.Proxy(''.join(['PYRONAME:', name]))

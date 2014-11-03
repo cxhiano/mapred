@@ -1,20 +1,15 @@
 import Pyro4
-import utils
-import dfile
+from utils.conf import load_config
+from utils.rmi import retrieve_object
 import sys
 import traceback
 import thread
-
-class File:
-    def __init__(self, nodename, filename):
-        self.nodename = nodename
-        self.filename = filename
 
 class NameNode:
     """ The name node of distributed file system """
 
     def __init__(self, conf):
-        self.conf = utils.load_config(conf)
+        self.conf = load_config(conf)
         self.files = {}
 
     def run_pyro_naming_server(self):
@@ -37,10 +32,10 @@ class NameNode:
         pass
 
     def get_file(self, filename):
-        f = self.files.get(filename)
-        if f is None:
-            return False
-        return utils.retrieve_object(f.nodename)
+        nodename = self.files.get(filename)
+        if nodename is None:
+            raise IOError('File Not Found')
+        return retrieve_object(nodename)
 
     def health_check(self):
         pass
@@ -54,15 +49,3 @@ class NameNode:
             except:
                 traceback.print_exc()
         '''
-
-
-if __name__ == '__main__':
-    node = NameNode('name_node.xml')
-    f = File('DataNode1', 'data_node.xml')
-    node.files = { 'xml': f }
-    node.run()
-    '''
-    node.health_check()
-    f = node.get_file('xml')
-    print f.read(0, 100)
-    '''

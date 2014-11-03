@@ -37,7 +37,3 @@ class DataNode:
 
     def heart_beat(self):
         return True
-
-if __name__ == '__main__':
-    node = DataNode('data_node.xml')
-    node.run()
