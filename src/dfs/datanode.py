@@ -23,12 +23,16 @@ class DataNode:
         pass
 
     def read_file(self, filename, offset, nbytes):
-        f = open(filename, 'r')
+        f = self.files.get(filename)
+        if f is None:
+            raise IOError('File not found')
         f.seek(offset)
         return f.read(nbytes)
 
     def readline_file(self, filename, offset):
-        f = open(filename, 'r')
+        f = self.files.get(filename)
+        if f is None:
+            raise IOError('File not found')
         f.seek(offset)
         return f.readline()
 
