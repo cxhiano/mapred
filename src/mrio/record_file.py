@@ -1,11 +1,15 @@
 class RecordFile:
-    def __init__(self, filename, namenode):
-        self.datanode = namenode.get_file(filename)
+    def __init__(self, filename, datanode):
+        self.datanode = datanode
         self.filename = filename
         self.offset = 0
 
     def seek(self, offset):
+        self.datanode.seek(self.filename, offset)
         self.offset = offset
+
+    def close(self):
+        self.datanode.close(self.filename)
 
     def read(self, nbytes):
         bytes_read = self.datanode.read_file(self.filename, nbytes)

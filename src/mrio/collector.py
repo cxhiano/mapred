@@ -1,17 +1,20 @@
 from .conf import *
+from mrio.outfile import MapperOutFile
 
 class OutputCollector:
-    def __init__(self, file_):
-        self.file_ = file_
+    def __init__(self, context):
+        self.context = context
         self.buffer = []
 
     def put(self, key, value):
         print key, value
         self.buffer.append((key, value))
         if len(self.buffer) >= SPILL_THESHOLD:
-            self.spill()
+            self.flush()
 
-    def spill(self):
+    def flush(self):
+        file_ = self.context.out_files[self.context.partition(key, value)]
+
         for key, value in self.buffer:
-            self.file_.write('%s\t%s\n', (key, value))
+            file_.write('%s\t%s\n', (key, value))
         self.buffer = []

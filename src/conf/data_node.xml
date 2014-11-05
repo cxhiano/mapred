@@ -6,6 +6,13 @@
 
     <port>54321</port>
 
-    <datadir>.</datadir>
+    <datadir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/data/</datadir>
+
+    <namenode>NameNode</namenode>
+
+    <pyroNS>
+        <host>localhost</host>
+        <port>8888</port>
+    </pyroNS>
 
 </namennode>

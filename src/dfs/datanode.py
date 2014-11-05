@@ -13,8 +13,8 @@ def openfile(func):
 class DataNode:
     """ A data node in distributed file system """
 
-    def __init__(self, conf):
-        self.conf = load_config(conf)
+    def __init__(self, conf_file):
+        self.conf = load_config(conf_file)
         self.files = {}
 
     def run(self):
@@ -26,7 +26,7 @@ class DataNode:
             ns=True)
 
     def real_filename(self, filename):
-        return filename
+        return ''.join([self.conf['datadir'], filename])
 
     def create_file(self, filename):
         real_fn = self.abs_filename(filename)
@@ -56,6 +56,10 @@ class DataNode:
     @openfile
     def seek(self, file_, offset):
         file_.seek(offset)
+
+    @openfile
+    def close(self, file_):
+        file_.close()
 
     def heart_beat(self):
         return True

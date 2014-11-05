@@ -6,8 +6,8 @@
 
     <port>12345</port>
 
-    <datanodes>
-        <name>DataNode1</name>
-    </datanodes>
-
+    <pyroNS>
+        <host>localhost</host>
+        <port>8888</port>
+    </pyroNS>
 </namennode>
