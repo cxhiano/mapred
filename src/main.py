@@ -2,13 +2,33 @@ from mrio.collector import OutputCollector
 from mrio.record_reader import RecordReader
 from mrio.record_file import RecordFile
 from core.maptask import MapTask
+from core.context import Context
+from utils.rmi import *
 from example.wordcount import WordCount
 import Pyro4
 
+def create_input(name_node):
+    fname = 'a.txt'
+    content = '''
+              Logging is a means of tracking events that happen when some software runs.
+              The software's developer adds logging calls to their code to indicate that
+              certain events have occurred. An event is described by a descriptive message
+              which can optionally contain variable data (i.e. data that is potentially
+              different for each occurrence of the event). Events also have an importance
+              which the developer ascribes to the event; the importance can also be called
+              the level or severity.
+              '''
+
+    datanode = name_node.create_file(fname)
+    datanode.write_file(fname, content)
+    datanode.close_file(fname)
+
 if __name__ == '__main__':
-    name_node = Pyro4.Proxy('PYRONAME:NameNode')
-    t = MapTask(1)
-    f = RecordFile('main.py', name_node)
-    r = RecordReader(f)
-    collector = OutputCollector(None)
-    t.run(WordCount, r, collector)
+    ns = Pyro4.locateNS(port=8888)
+    name_node = retrieve_object(ns, 'NameNode')
+    create_input(name_node)
+    context = Context(1, 10, 5, WordCount, WordCount)
+    context.name_node = name_node
+    context.input = 'a.txt'
+    task = MapTask(2, context)
+    task.run()

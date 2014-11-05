@@ -30,6 +30,9 @@ class DataNode:
         self.conf = load_config(conf_file)
         self.files = {}
 
+    def get_conf(self, key):
+        return self.conf[key]
+
     def run(self):
         self.ns = locateNS(**self.conf['pyroNS'])
         if self.ns is None:
@@ -70,7 +73,8 @@ class DataNode:
 
     @openfile('w')
     def write_file(self, file_, buf):
-        return file_.write(buf)
+        file_.write(buf)
+        return len(buf)
 
     @openfile('rw')
     def seek_file(self, file_, offset):

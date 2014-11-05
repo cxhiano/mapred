@@ -16,6 +16,9 @@ class NameNode:
         self.datanodes = {}
         self.files = {}
 
+    def get_conf(self, key):
+        return self.conf[key]
+
     def run_pyro_naming_server(self):
         pyroNS_conf = self.conf['pyroNS']
         Pyro4.naming.startNSloop(pyroNS_conf['host'], int(pyroNS_conf['port']))
@@ -47,7 +50,7 @@ class NameNode:
                 return
             datanode = self.datanodes.values()[random.randint(0, n - 1)]
         else:
-            if self.datanodes.get(preference.conf['name']) is None:
+            if self.datanodes.get(preference.get_conf('name')) is None:
                 raise IOError('Preferred data node not exist')
                 return
             datanode = preference

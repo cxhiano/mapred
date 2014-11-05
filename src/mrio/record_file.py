@@ -5,11 +5,11 @@ class RecordFile:
         self.offset = 0
 
     def seek(self, offset):
-        self.datanode.seek(self.filename, offset)
+        self.datanode.seek_file(self.filename, offset)
         self.offset = offset
 
     def close(self):
-        self.datanode.close(self.filename)
+        self.datanode.close_file(self.filename)
 
     def read(self, nbytes):
         bytes_read = self.datanode.read_file(self.filename, nbytes)
@@ -29,6 +29,9 @@ class RecordFile:
     def append(self, string):
         self.write(string)
         self.offset += len(string)
+
+    def delete(self):
+        self.datanode.delete_file(self.filename)
 
     def __iter__(self):
         while True:

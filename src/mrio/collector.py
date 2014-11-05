@@ -13,8 +13,7 @@ class OutputCollector:
             self.flush()
 
     def flush(self):
-        file_ = self.context.out_files[self.context.partition(key, value)]
-
         for key, value in self.buffer:
-            file_.write('%s\t%s\n', (key, value))
+            file_ = self.context.out_files[self.context.partition(key, value)]
+            file_.write('%s\t%s\n' % (key, value))
         self.buffer = []
