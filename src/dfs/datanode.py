@@ -30,20 +30,20 @@ class DataNode:
         self.conf = load_config(conf_file)
         self.files = {}
 
-    def get_conf(self, key):
-        return self.conf[key]
-
-    def run(self):
         self.ns = locateNS(**self.conf['pyroNS'])
+
         if self.ns is None:
             logging.error('Cannot locate Pyro name server')
             return
 
+        self.namenode = retrieve_object(self.ns, self.conf['namenode'])
+
+    def get_conf(self, key):
+        return self.conf[key]
+
+    def run(self):
         daemon = setup_Pyro_obj(self, self.ns)
-
-        namenode = retrieve_object(self.ns, self.conf['namenode'])
-        namenode.report(self.conf['name'])
-
+        self.namenode.report(self.conf['name'])
         daemon.requestLoop()
 
     def real_filename(self, filename):
@@ -55,13 +55,21 @@ class DataNode:
 
         if filename in self.files:
             raise IOError('File already exists!')
-        self.files[filename] = None
+        self.files[filename] = open(real_fn, 'w')
 
-    @openfile('rw')
-    def delete_file(self, file_):
-        self.close(file_)
-        os.remove(file_.name)
-        del self.files[file_.name]
+        self.namenode.create_file_meta(filename, self)
+
+    def delete_file(self, filename):
+        if not filename in self.files:
+            logging.warning('%s does not exist' % filename)
+            return
+
+        logging.info('deleting file %s' % filename)
+
+        real_fn = self.real_filename(filename)
+        os.remove(real_fn)
+        del self.files[filename]
+        self.namenode.delete_file_meta(filename)
 
     @openfile('r')
     def read_file(self, file_, nbytes):

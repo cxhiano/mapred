@@ -27,8 +27,11 @@ if __name__ == '__main__':
     ns = Pyro4.locateNS(port=8888)
     name_node = retrieve_object(ns, 'NameNode')
     create_input(name_node)
-    context = Context(1, 10, 5, WordCount, WordCount)
+    context = Context(2, 10, 2, WordCount, WordCount)
     context.name_node = name_node
     context.input = 'a.txt'
     task = MapTask(2, context)
     task.run()
+    print name_node.get_file('2_2_0')
+    task.cleanup()
+    name_node.get_file('2_2_0')

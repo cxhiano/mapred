@@ -39,8 +39,18 @@ class NameNode:
         daemon = setup_Pyro_obj(self, self.ns)
         daemon.requestLoop()
 
+    def create_file_meta(self, filename, datanode):
+        if filename in self.files:
+            raise IOError('File already exists!')
+        self.files[filename] = datanode
+
+    def delete_file_meta(self, filename):
+        if not filename in self.files:
+            raise IOError('File not found!')
+        del self.files[filename]
+
     def create_file(self, filename, preference=None):
-        if not self.files.get(filename) is None:
+        if filename in self.files:
             raise IOError('File already exists!')
 
         if preference is None:
@@ -55,26 +65,22 @@ class NameNode:
                 return
             datanode = preference
 
-        self.files[filename] = datanode
         datanode.create_file(filename)
 
         return datanode
 
     def delete_file(self, filename):
-        datanode = self.files.get(filename)
-        if datanode is None:
-            raise IOError('File not found')
+        if not filename in self.files:
+            logging.warning('%s does not exist' % datanode)
+            return
 
-        datanode.delete_file(filename)
-
-        return datanode
+        self.files[filename].delete_file(filename)
 
     def get_file(self, filename):
-        datanode = self.files.get(filename)
-        if datanode is None:
+        if not filename in self.files:
             raise IOError('File Not Found')
 
-        return datanode
+        return self.files[filename]
 
     def health_check(self):
         # TODO
