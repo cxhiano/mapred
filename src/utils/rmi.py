@@ -1,7 +1,7 @@
 import time
 import logging
 import Pyro4
-from conf import *
+from utils.conf import *
 
 def retrieve_object(ns, name):
     uri = ns.lookup(name)
