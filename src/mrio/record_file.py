@@ -8,18 +8,27 @@ class RecordFile:
         self.offset = offset
 
     def read(self, nbytes):
-        return self.datanode.read_file(self.filename, self.offset, nbytes)
+        bytes_read = self.datanode.read_file(self.filename, nbytes)
+        self.offset += bytes_read
+        return bytes_read
 
     def write(self, buf):
-        self.datanode.write_file(self.filename, buf, self.offset, len(buf))
+        bytes_written = self.datanode.write_file(self.filename, buf)
+        self.offset += bytes_written
+        return bytes_written
 
     def readline(self):
-        return self.datanode.readline_file(self.filename, self.offset)
+        line = self.datanode.readline_file(self.filename)
+        self.offset += len(line)
+        return line
+
+    def append(self, string):
+        self.write(string)
+        self.offset += len(string)
 
     def __iter__(self):
         while True:
-            tmp = self.readline()
-            if len(tmp) == 0:
+            line = self.readline()
+            if len(line) == 0:
                 break
-            yield tmp
-            self.offset += len(tmp)
+            yield line

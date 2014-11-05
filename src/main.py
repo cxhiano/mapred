@@ -7,7 +7,7 @@ import Pyro4
 
 if __name__ == '__main__':
     name_node = Pyro4.Proxy('PYRONAME:NameNode')
-    t = MapTask()
+    t = MapTask(1)
     f = RecordFile('main.py', name_node)
     r = RecordReader(f)
     collector = OutputCollector(None)

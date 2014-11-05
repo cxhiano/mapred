@@ -1,7 +1,7 @@
 
 class MapTask:
-    def __init__(self):
-        pass
+    def __init__(self, taskid):
+        self.id = taskid
 
     def run(self, MapperClass, inp, out):
         mapper = MapperClass()
