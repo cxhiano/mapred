@@ -1,10 +1,12 @@
 import sys
 import traceback
 import thread
+import random
+import logging
 import Pyro4
 from utils.conf_loader import load_config
 from utils.rmi import *
-from conf import *
+from .conf import *
 
 class NameNode:
     """ The name node of distributed file system """
@@ -19,19 +21,19 @@ class NameNode:
         Pyro4.naming.startNSloop(pyroNS_conf['host'], int(pyroNS_conf['port']))
 
     def report(self, datanode):
-        self.datanodes[datanode.conf['name']] = datanode
+        self.datanodes[datanode] = retrieve_object(self.ns, datanode)
+        logging.info('receive report from %s' % datanode)
         return True
 
     def run(self):
         thread.start_new_thread(self.run_pyro_naming_server, tuple())
 
-        ns = locateNS(**self.conf['pyroNS'])
-        if ns == None:
-            print 'Cannot locate Pyro NS.'
+        self.ns = locateNS(**self.conf['pyroNS'])
+        if self.ns == None:
+            logging.error('Cannot locate Pyro NS.')
             return
 
-        daemon = setup_Pyro_obj(self, self.conf['name'], self.conf['host'],
-            int(self.conf['port']), ns)
+        daemon = setup_Pyro_obj(self, self.ns)
         daemon.requestLoop()
 
     def create_file(self, filename, preference=None):
@@ -39,33 +41,40 @@ class NameNode:
             raise IOError('File already exists!')
 
         if preference is None:
-            pass
+            n = len(self.datanodes)
+            if n == 0:
+                raise IOError('No data node available')
+                return
+            datanode = self.datanodes.values()[random.randint(0, n - 1)]
         else:
-            self.file[filename] = preference.conf['name']
+            if self.datanodes.get(preference.conf['name']) is None:
+                raise IOError('Preferred data node not exist')
+                return
             datanode = preference
 
+        self.files[filename] = datanode
         datanode.create_file(filename)
 
         return datanode
 
     def delete_file(self, filename):
-        nodename = self.files.get(filename)
-        if nodename is None:
+        datanode = self.files.get(filename)
+        if datanode is None:
             raise IOError('File not found')
 
-        datanode = self.datanodes[nodename]
         datanode.delete_file(filename)
 
         return datanode
 
     def get_file(self, filename):
-        nodename = self.files.get(filename)
-        if nodename is None:
+        datanode = self.files.get(filename)
+        if datanode is None:
             raise IOError('File Not Found')
 
-        return self.datanodes[nodename]
+        return datanode
 
     def health_check(self):
+        # TODO
         for datanode in self.datanodes.values():
             try:
                 node.heart_beat()
