@@ -8,4 +8,8 @@ class Splitter:
             for line in f:
                 buf.append(line)
                 if len(buf) == self.records_per_block:
-                    pass
+                    yield buf
+                    buf = []
+
+        if len(buf) != 0:
+            yield buf

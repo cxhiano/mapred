@@ -4,11 +4,15 @@ from mrio.record_file import RecordFile
 from core.maptask import MapTask
 from core.context import Context
 from utils.rmi import *
+from core.jobrunner import JobRunner
+from core.job import Job
 from example.wordcount import WordCount
 import Pyro4
 
-def create_input(namenode):
-    fname = 'a.txt'
+ns = Pyro4.locateNS(port=8888)
+namenode = retrieve_object(ns, 'NameNode')
+
+def create_input(fname, namenode):
     content = '''
               Logging is a means of tracking events that happen when some software runs.
               The software's developer adds logging calls to their code to indicate that
@@ -23,12 +27,20 @@ def create_input(namenode):
     datanode.write_file(fname, content)
     datanode.close_file(fname)
 
-if __name__ == '__main__':
-    ns = Pyro4.locateNS(port=8888)
-    namenode = retrieve_object(ns, 'NameNode')
-    create_input(namenode)
+def test_map():
+    create_input('a.txt', namenode)
     context = Context(2, 10, 2, WordCount, WordCount)
     context.namenode =namenode
     context.input = 'a.txt'
     task = MapTask(2, context)
     task.run()
+
+if __name__ == '__main__':
+  jr = JobRunner('conf/job_runner.xml')
+  create_input('a.txt', namenode)
+  create_input('b.txt', namenode)
+  job = Job()
+  job.inputs = ['a.txt', 'b.txt']
+  job.id = 1
+  jr.namenode = namenode
+  print jr.split_input(job)
