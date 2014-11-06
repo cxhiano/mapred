@@ -5,8 +5,9 @@ from core.maptask import MapTask
 from core.context import Context
 from utils.rmi import *
 from core.jobrunner import JobRunner
+from core.taskrunner import TaskRunner
 from core.job import Job
-from example.wordcount import WordCount
+import example.wordcount as wordcount
 import Pyro4
 
 ns = Pyro4.locateNS(port=8888)
@@ -36,11 +37,18 @@ def test_map():
     task.run()
 
 if __name__ == '__main__':
-  jr = JobRunner('conf/job_runner.xml')
+  '''
   create_input('a.txt', namenode)
   create_input('b.txt', namenode)
+  '''
+  Pyro4.config.SERIALIZER = 'marshal'
+  tr = TaskRunner('conf/task_runner.xml')
+  jr = retrieve_object(ns, 'JobRunner')
   job = Job()
+  job.mapper = wordcount.map
+  job.reducer = wordcount.reduce
+  job.cnt_reducers = 2
   job.inputs = ['a.txt', 'b.txt']
-  job.id = 1
-  jr.namenode = namenode
-  print jr.split_input(job)
+  job.output_dir = '.'
+  jr.submit_job(job.serialize())
+

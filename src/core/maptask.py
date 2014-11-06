@@ -5,10 +5,8 @@ from mrio.record_reader import RecordReader
 from utils.filenames import *
 
 class MapTask:
-    def __init__(self, taskid, context):
-        self.id = taskid
+    def __init__(self, context):
         self.context = context.clone()
-        self.context.taskid = taskid
         self.context.out_files = []
 
     def create_output_files(self):
@@ -24,13 +22,13 @@ class MapTask:
     def run(self):
         self.create_output_files()
 
-        mapper = self.context.Mapper()
+        mapper = self.context.mapper
         input_fname = map_input(self.context.jobid, self.context.taskid)
         inp = RecordReader(RecordFile(input_fname, self.context.namenode))
         out = OutputCollector(self.context)
 
         for record in inp:
-            mapper.map(record.key, record.value, out)
+            mapper(record.key, record.value, out)
 
         out.flush()
 

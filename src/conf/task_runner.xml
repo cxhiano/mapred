@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jobrunner>
+    <name>TaskRunner</name>
+
+    <jobrunner>JobRunner</jobrunner>
+
+    <namenode>NameNode</namenode>
+
+    <host>localhost</host>
+
+    <port>11111</port>
+
+    <pyroNS>
+        <host>localhost</host>
+        <port>8888</port>
+    </pyroNS>
+</jobrunner>

@@ -1,17 +1,20 @@
+import thread
 from Queue import Queue
+from core.job import Job
 from utils.filenames import *
 from utils.splitter import Splitter
 from utils.conf_loader import load_config
 from mrio.record_file import RecordFile
+from utils.rmi import *
 
 class JobRunner:
     def __init__(self, conf):
-        self.jobs = Queue()
+        self.tasks = Queue(10)
         self.conf = load_config(conf)
         self.jobid = 1
 
-    def add_job(self, job):
-        self.jobs.put(job)
+    def get_task(self):
+        return self.tasks.get()
 
     def split_input(self, job):
         splitter = Splitter(5)
@@ -32,8 +35,30 @@ class JobRunner:
 
         return results
 
-    def generate_map_tasks(self):
-        pass
+    def make_mapper_context(self, taskid, input_fn, job):
+        context.jobid = job.id
+        context.taskid = taskid
+        context.mapper = job.mapper
+        context.cnt_reducers = job.cnt_reducers
+        context.input = input_f
+        return context
+
+    def run_job(self, job):
+        logging.info('start running job %d' % job.id)
+        blocks = self.split_input(job)
+        print blocks
+        for i in range(len(blocks)):
+            context = self.make_mapper_context(i, blocks[i], job)
+            self.tasks.put(context)
+
+        # generate and dispatch reducer
+
+    def submit_job(self, job_skeleton):
+        job = Job(job_skeleton)
+        job.id = self.jobid
+        self.jobid += 1
+        # thread.start_new_thread(self.run_job, tuple(job))
+        self.run_job(job)
 
     def serve(self):
         self.ns = locateNS(**self.conf['pyroNS'])
@@ -44,12 +69,5 @@ class JobRunner:
 
         self.namenode = retrieve_object(self.ns, self.conf['namenode'])
 
-        while True:
-            job = self.jobs.get()
-            job.id = self.jobid
-            self.jobid += 1
-            blocks = self.split_input(job)
-            for i in range(len(blocks)):
-                pass
-
-            # generate and dispatch reducer
+        daemon = setup_Pyro_obj(self, self.ns)
+        daemon.requestLoop()
