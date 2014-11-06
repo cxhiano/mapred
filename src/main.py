@@ -37,10 +37,8 @@ def test_map():
     task.run()
 
 if __name__ == '__main__':
-  '''
   create_input('a.txt', namenode)
   create_input('b.txt', namenode)
-  '''
   Pyro4.config.SERIALIZER = 'marshal'
   tr = TaskRunner('conf/task_runner.xml')
   jr = retrieve_object(ns, 'JobRunner')
@@ -51,4 +49,5 @@ if __name__ == '__main__':
   job.inputs = ['a.txt', 'b.txt']
   job.output_dir = '.'
   jr.submit_job(job.serialize())
+  context = jr.get_task()
 

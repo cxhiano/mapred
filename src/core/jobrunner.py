@@ -1,6 +1,7 @@
 import thread
 from Queue import Queue
 from core.job import Job
+from core.context import Context
 from utils.filenames import *
 from utils.splitter import Splitter
 from utils.conf_loader import load_config
@@ -9,7 +10,7 @@ from utils.rmi import *
 
 class JobRunner:
     def __init__(self, conf):
-        self.tasks = Queue(10)
+        self.tasks = Queue(2)
         self.conf = load_config(conf)
         self.jobid = 1
 
@@ -36,19 +37,20 @@ class JobRunner:
         return results
 
     def make_mapper_context(self, taskid, input_fn, job):
+        context = Context()
         context.jobid = job.id
         context.taskid = taskid
         context.mapper = job.mapper
         context.cnt_reducers = job.cnt_reducers
-        context.input = input_f
+        context.input = input_fn
         return context
 
     def run_job(self, job):
         logging.info('start running job %d' % job.id)
         blocks = self.split_input(job)
-        print blocks
         for i in range(len(blocks)):
             context = self.make_mapper_context(i, blocks[i], job)
+            logging.info('enqueue task %d for job %d' % (i, job.id))
             self.tasks.put(context)
 
         # generate and dispatch reducer
@@ -57,6 +59,8 @@ class JobRunner:
         job = Job(job_skeleton)
         job.id = self.jobid
         self.jobid += 1
+        print job.mapper
+        print job.inputs
         # thread.start_new_thread(self.run_job, tuple(job))
         self.run_job(job)
 

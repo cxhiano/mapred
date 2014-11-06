@@ -5,19 +5,26 @@ class Job:
     def __init__(self, skeleton=None):
         if not skeleton is None:
             for attr in skeleton:
-                setattr(self, attr, skeleton[attr])
-            self.mapper = types.FunctionType(self.mapper, {})
-            self.reducer = types.FunctionType(self.reducer, {})
+                value = skeleton[attr]
+                if isinstance(value, types.CodeType):
+                    setattr(self, attr, types.FunctionType(value, {}))
+                else:
+                    setattr(self, attr, skeleton[attr])
 
     def validate(self):
         return True
 
     def serialize(self):
-        skeleton = {
-            'mapper': self.mapper.func_code,
-            'reducer': self.mapper.func_code,
-            'cnt_reducers': self.cnt_reducers,
-            'inputs': self.inputs,
-            'output_dir': self.output_dir
-            }
+        skeleton = {}
+        for attr_name in dir(self):
+            if attr_name.startswith('_'):
+                continue
+            attr = getattr(self, attr_name)
+            if isinstance(attr, types.MethodType):
+                continue
+            if isinstance(attr, types.FunctionType):
+                skeleton[attr_name] = attr.func_code
+            else:
+                skeleton[attr_name] = attr
+
         return skeleton
