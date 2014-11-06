@@ -1,4 +1,3 @@
-from mrio.outfile import MapperOutFile
 from mrio.collector import OutputCollector
 from mrio.record_file import RecordFile
 from mrio.record_reader import RecordReader
@@ -11,8 +10,8 @@ class MapTask:
 
     def create_output_files(self):
         datanode = None
-        for fname in MapperOutFile.get_all_names(self.context.jobid,
-                self.context.taskid, self.context.cnt_reducers):
+        for i in range(self.context.cnt_reducers):
+            fname = map_output(self.context.jobid, self.context.taskid, i)
             if datanode is None:
                 datanode = self.context.namenode.create_file(fname)
             else:
