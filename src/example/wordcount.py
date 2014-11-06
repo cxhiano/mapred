@@ -1,7 +1,7 @@
 import re
 
 def map(key, value, out):
-    for word in re.split('\\s+', value):
+    for word in value.split():
         if len(word) > 0:
             out.put(word, 1)
 

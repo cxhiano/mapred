@@ -50,3 +50,7 @@ if __name__ == '__main__':
   job.output_dir = '.'
   print jr.submit_job(job.serialize())
   context = Context(jr.get_task())
+  context.namenode = namenode
+  maptask = MapTask(context)
+  Pyro4.config.SERIALIZER = 'serpent'
+  maptask.run()

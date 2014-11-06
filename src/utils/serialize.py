@@ -4,7 +4,7 @@ def loads(obj, skeleton):
     for attr in skeleton:
         value = skeleton[attr]
         if isinstance(value, types.CodeType):
-            setattr(obj, attr, types.FunctionType(value, {}))
+            setattr(obj, attr, types.FunctionType(value, globals()))
         else:
             setattr(obj, attr, skeleton[attr])
 
