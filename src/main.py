@@ -49,4 +49,4 @@ if __name__ == '__main__':
   job.inputs = ['a.txt', 'b.txt']
   job.output_dir = '.'
   print jr.submit_job(job.serialize())
-  context = jr.get_task()
+  context = Context(jr.get_task())
