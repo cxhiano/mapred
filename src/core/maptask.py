@@ -15,17 +15,17 @@ class MapTask:
         for fname in MapperOutFile.get_all_names(self.context.jobid,
                 self.context.taskid, self.context.cnt_reducers):
             if datanode is None:
-                datanode = self.context.name_node.create_file(fname)
+                datanode = self.context.namenode.create_file(fname)
             else:
-                self.context.name_node.create_file(fname, preference=datanode)
-            self.context.out_files.append(RecordFile(fname, datanode))
+                self.context.namenode.create_file(fname, preference=datanode)
+            self.context.out_files.append(RecordFile(fname, self.context.namenode))
 
     def run(self):
         self.create_output_files()
 
         mapper = self.context.Mapper()
         input_fname = self.context.input
-        inp = RecordReader(RecordFile(input_fname, self.context.name_node.get_file(input_fname)))
+        inp = RecordReader(RecordFile(input_fname, self.context.namenode))
         out = OutputCollector(self.context)
 
         for record in inp:

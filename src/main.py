@@ -7,7 +7,7 @@ from utils.rmi import *
 from example.wordcount import WordCount
 import Pyro4
 
-def create_input(name_node):
+def create_input(namenode):
     fname = 'a.txt'
     content = '''
               Logging is a means of tracking events that happen when some software runs.
@@ -19,19 +19,16 @@ def create_input(name_node):
               the level or severity.
               '''
 
-    datanode = name_node.create_file(fname)
+    datanode = namenode.create_file(fname)
     datanode.write_file(fname, content)
     datanode.close_file(fname)
 
 if __name__ == '__main__':
     ns = Pyro4.locateNS(port=8888)
-    name_node = retrieve_object(ns, 'NameNode')
-    create_input(name_node)
+    namenode = retrieve_object(ns, 'NameNode')
+    create_input(namenode)
     context = Context(2, 10, 2, WordCount, WordCount)
-    context.name_node = name_node
+    context.namenode =namenode
     context.input = 'a.txt'
     task = MapTask(2, context)
     task.run()
-    print name_node.get_file('2_2_0')
-    task.cleanup()
-    name_node.get_file('2_2_0')

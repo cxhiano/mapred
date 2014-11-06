@@ -1,6 +1,6 @@
 class RecordFile:
-    def __init__(self, filename, datanode):
-        self.datanode = datanode
+    def __init__(self, filename, namenode):
+        self.datanode = namenode.get_file(filename)
         self.filename = filename
         self.offset = 0
 

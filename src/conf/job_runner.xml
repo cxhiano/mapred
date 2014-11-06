@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<namenode>
-    <name>NameNode</name>
+<jobrunner>
+    <name>JobRunner</name>
+
+    <namenode>NameNode</namenode>
 
     <host>localhost</host>
 
-    <port>12345</port>
+    <port>22222</port>
 
     <pyroNS>
         <host>localhost</host>
         <port>8888</port>
     </pyroNS>
-</namenode>
+</jobrunner>
