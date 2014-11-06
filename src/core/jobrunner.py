@@ -15,7 +15,8 @@ class JobRunner:
         self.jobid = 1
 
     def get_task(self):
-        return self.tasks.get()
+        context = self.tasks.get()
+        return context.serialize()
 
     def split_input(self, job):
         splitter = Splitter(5)
@@ -59,10 +60,8 @@ class JobRunner:
         job = Job(job_skeleton)
         job.id = self.jobid
         self.jobid += 1
-        print job.mapper
-        print job.inputs
-        # thread.start_new_thread(self.run_job, tuple(job))
-        self.run_job(job)
+        thread.start_new_thread(self.run_job, tuple([job]))
+        return job.id
 
     def serve(self):
         self.ns = locateNS(**self.conf['pyroNS'])
