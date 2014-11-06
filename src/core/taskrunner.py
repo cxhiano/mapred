@@ -1,4 +1,5 @@
 from queue import Queue
+from maptask import MapTask
 
 class TaskRunner:
     def __init__(self):
@@ -10,3 +11,5 @@ class TaskRunner:
     def serve(self):
         while True:
             taskid, context = self.tasks.get()
+            maptask = MapTask(taskid, context)
+            maptask.run()

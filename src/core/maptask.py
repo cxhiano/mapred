@@ -2,6 +2,7 @@ from mrio.outfile import MapperOutFile
 from mrio.collector import OutputCollector
 from mrio.record_file import RecordFile
 from mrio.record_reader import RecordReader
+from utils.filenames import *
 
 class MapTask:
     def __init__(self, taskid, context):
@@ -24,7 +25,7 @@ class MapTask:
         self.create_output_files()
 
         mapper = self.context.Mapper()
-        input_fname = self.context.input
+        input_fname = map_input(self.context.jobid, self.context.taskid)
         inp = RecordReader(RecordFile(input_fname, self.context.namenode))
         out = OutputCollector(self.context)
 

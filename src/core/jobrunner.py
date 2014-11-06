@@ -48,8 +48,8 @@ class JobRunner:
             job = self.jobs.get()
             job.id = self.jobid
             self.jobid += 1
-            # split
-            # generate and dispatch mapper
+            blocks = self.split_input(job)
+            for i in range(len(blocks)):
+                pass
+
             # generate and dispatch reducer
-
-

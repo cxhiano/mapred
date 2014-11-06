@@ -30,6 +30,10 @@ class DataNode:
         self.conf = load_config(conf_file)
         self.files = {}
 
+    def get_conf(self, key):
+        return self.conf[key]
+
+    def run(self):
         self.ns = locateNS(**self.conf['pyroNS'])
 
         if self.ns is None:
@@ -38,10 +42,6 @@ class DataNode:
 
         self.namenode = retrieve_object(self.ns, self.conf['namenode'])
 
-    def get_conf(self, key):
-        return self.conf[key]
-
-    def run(self):
         daemon = setup_Pyro_obj(self, self.ns)
         self.namenode.report(self.conf['name'])
         daemon.requestLoop()
