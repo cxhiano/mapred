@@ -56,8 +56,3 @@ if __name__ == '__main__':
 
     jr = retrieve_object(ns, 'JobRunner')
     jr.submit_job(serialize.dumps(jobconf))
-
-    time.sleep(5)
-
-    jr.test()
-
