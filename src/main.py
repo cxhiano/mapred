@@ -31,31 +31,41 @@ def create_input(fname, namenode):
 
 def test_map():
     create_input('a.txt', namenode)
-    context = Context(2, 10, 2, WordCount, WordCount)
-    context.namenode =namenode
-    context.input = 'a.txt'
-    task = MapTask(2, context)
+    task_conf = {
+        'jobid': 1,
+        'taskid': 1,
+        'mapper': wordcount.map,
+        'cnt_reducers': 2,
+        'input': 'a.txt'
+    }
+    c = Context()
+    c.namenode = namenode
+
+    task = MapTask(task_conf, c)
     task.run()
 
+def test_jobrunner():
+    create_input('a.txt', namenode)
+    create_input('b.txt', namenode)
+    Pyro4.config.SERIALIZER = 'marshal'
+    tr = TaskRunner('conf/task_runner.xml')
+    jr = retrieve_object(ns, 'JobRunner')
+    jobconf = {
+        'mapper': wordcount.map,
+        'reducer': wordcount.reduce,
+        'cnt_reducers': 2,
+        'inputs': ['a.txt', 'b.txt'],
+        'output_dir': '.'
+    }
+    jr.submit_job(serialize.dumps(jobconf))
+    '''
+    context = Context()
+    serialize.loads(context, jr.get_task())
+    context.namenode = namenode
+    maptask = MapTask(context)
+    Pyro4.config.SERIALIZER = 'serpent'
+    maptask.run()
+    '''
+
 if __name__ == '__main__':
-  create_input('a.txt', namenode)
-  create_input('b.txt', namenode)
-  Pyro4.config.SERIALIZER = 'marshal'
-  tr = TaskRunner('conf/task_runner.xml')
-  jr = retrieve_object(ns, 'JobRunner')
-  jobconf = {
-    'mapper': wordcount.map,
-    'reducer': wordcount.reduce,
-    'cnt_reducers': 2,
-    'inputs': ['a.txt', 'b.txt'],
-    'output_dir': '.'
-  }
-  jr.submit_job(serialize.dumps(jobconf))
-  '''
-  context = Context()
-  serialize.loads(context, jr.get_task())
-  context.namenode = namenode
-  maptask = MapTask(context)
-  Pyro4.config.SERIALIZER = 'serpent'
-  maptask.run()
-  '''
+    test_map()

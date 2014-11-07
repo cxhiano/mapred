@@ -2,9 +2,13 @@ from .conf import *
 from mrio.outfile import MapperOutFile
 
 class OutputCollector:
-    def __init__(self, context):
-        self.context = context
+    def __init__(self, out_files, partitions):
+        self.out_files = out_files
+        self.partitions = partitions
         self.buffer = []
+
+    def partition(self, key):
+        return str(key).__hash__() % self.partitions
 
     def put(self, key, value):
         print key, value
@@ -14,6 +18,6 @@ class OutputCollector:
 
     def flush(self):
         for key, value in self.buffer:
-            file_ = self.context.out_files[self.context.partition(key, value)]
+            file_ = self.out_files[self.partition(key)]
             file_.write('%s\t%s\n' % (key, value))
         self.buffer = []
