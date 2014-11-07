@@ -7,14 +7,14 @@ def retrieve_object(ns, name):
     uri = ns.lookup(name)
     return Pyro4.Proxy(uri)
 
-def locateNS(**kwargs):
+def locateNS(host, port):
     ns = None
     for i in range(PYRO_LOCATE_NS_RETRY_TIMES):
         time.sleep(PYRO_LOCATE_NS_RETRY_INTERVAL)
         try:
             logging.info('Looking for Pyro name server at %s:%s' % \
-                (kwargs['host'], kwargs['port']))
-            ns = Pyro4.locateNS(kwargs['host'], int(kwargs['port']))
+                (host, port))
+            ns = Pyro4.locateNS(host, port)
             logging.info("Ok! Pyro NS found.")
             break
         except Pyro4.errors.NamingError:
@@ -23,13 +23,9 @@ def locateNS(**kwargs):
 
     return ns
 
-def setup_Pyro_obj(obj, ns):
-    host = obj.conf['host']
-    port = int(obj.conf['port'])
-    name = obj.conf['name']
-
-    daemon = Pyro4.Daemon(host, port)
-    uri = daemon.register(obj, name)
-    ns.register(name, uri)
+def export(obj):
+    daemon = Pyro4.Daemon(obj.host, int(obj.port))
+    uri = daemon.register(obj, obj.name)
+    obj.ns.register(obj.name, uri)
 
     return daemon

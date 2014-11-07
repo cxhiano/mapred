@@ -4,24 +4,21 @@ import thread
 import random
 import logging
 import Pyro4
+from core.configurable import Configurable
 from utils.conf_loader import load_config
 from utils.rmi import *
 from .conf import *
 
-class NameNode:
+class NameNode(Configurable):
     """ The name node of distributed file system """
 
     def __init__(self, conf):
-        self.conf = load_config(conf)
+        self.load_dict(load_config(conf))
         self.datanodes = {}
         self.files = {}
 
-    def get_conf(self, key):
-        return self.conf[key]
-
     def run_pyro_naming_server(self):
-        pyroNS_conf = self.conf['pyroNS']
-        Pyro4.naming.startNSloop(pyroNS_conf['host'], int(pyroNS_conf['port']))
+        Pyro4.naming.startNSloop(self.pyroNS['host'], int(self.pyroNS['port']))
 
     def report(self, datanode):
         self.datanodes[datanode] = retrieve_object(self.ns, datanode)
@@ -31,12 +28,12 @@ class NameNode:
     def run(self):
         thread.start_new_thread(self.run_pyro_naming_server, tuple())
 
-        self.ns = locateNS(**self.conf['pyroNS'])
+        self.ns = locateNS(self.pyroNS['host'], int(self.pyroNS['port']))
         if self.ns == None:
             logging.error('Cannot locate Pyro NS.')
             return
 
-        daemon = setup_Pyro_obj(self, self.ns)
+        daemon = export(self)
         daemon.requestLoop()
 
     def create_file_meta(self, filename, datanode):
@@ -60,7 +57,7 @@ class NameNode:
                 return
             datanode = self.datanodes.values()[random.randint(0, n - 1)]
         else:
-            if self.datanodes.get(preference.get_conf('name')) is None:
+            if self.datanodes.get(preference.get_name()) is None:
                 raise IOError('Preferred data node not exist')
                 return
             datanode = preference

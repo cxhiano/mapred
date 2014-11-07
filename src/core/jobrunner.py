@@ -1,14 +1,15 @@
 import thread
 from Queue import Queue
 from core.job import Job
+from core.configurable import Configurable
 from utils.conf_loader import load_config
 from utils.rmi import *
 import utils.serialize as serialize
 
-class JobRunner:
+class JobRunner(Configurable):
     def __init__(self, conf):
+        self.load_dict(load_config(conf))
         self.tasks = Queue(2)
-        self.conf = load_config(conf)
         self.jobid = 1
         self.jobs = {}
 
@@ -41,13 +42,13 @@ class JobRunner:
         return job.id
 
     def serve(self):
-        self.ns = locateNS(**self.conf['pyroNS'])
+        self.ns = locateNS(self.pyroNS['host'], int(self.pyroNS['port']))
 
         if self.ns is None:
             logging.error('Cannot locate Pyro name server')
             return
 
-        self.namenode = retrieve_object(self.ns, self.conf['namenode'])
+        self.namenode = retrieve_object(self.ns, self.namenode)
 
-        daemon = setup_Pyro_obj(self, self.ns)
+        daemon = export(self)
         daemon.requestLoop()

@@ -1,6 +1,7 @@
 import os
 import logging
 import Pyro4
+from core.configurable import Configurable
 from utils.conf_loader import load_config
 from utils.rmi import *
 
@@ -23,31 +24,31 @@ def openfile(mode):
         return wrapper
     return actual_decorator
 
-class DataNode:
+class DataNode(Configurable):
     """ A data node in distributed file system """
 
     def __init__(self, conf_file):
-        self.conf = load_config(conf_file)
+        self.load_dict(load_config(conf_file))
         self.files = {}
 
-    def get_conf(self, key):
-        return self.conf[key]
+    def get_name(self):
+        return self.name
 
     def run(self):
-        self.ns = locateNS(**self.conf['pyroNS'])
+        self.ns = locateNS(self.pyroNS['host'], int(self.pyroNS['port']))
 
         if self.ns is None:
             logging.error('Cannot locate Pyro name server')
             return
 
-        self.namenode = retrieve_object(self.ns, self.conf['namenode'])
+        self.namenode = retrieve_object(self.ns, self.namenode)
 
-        daemon = setup_Pyro_obj(self, self.ns)
-        self.namenode.report(self.conf['name'])
+        daemon = export(self)
+        self.namenode.report(self.name)
         daemon.requestLoop()
 
     def real_filename(self, filename):
-        return ''.join([self.conf['datadir'], filename])
+        return ''.join([self.datadir, filename])
 
     def create_file(self, filename):
         real_fn = self.real_filename(filename)

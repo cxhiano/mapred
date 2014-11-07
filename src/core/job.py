@@ -9,9 +9,9 @@ import utils.serialize as serialize
 
 class Job(Configurable):
     def __init__(self, jobid, jobconf, runner):
+        self.load_dict(jobconf)
         self.id = jobid
         self.runner = runner
-        self.load_dict(jobconf)
 
     def run(self):
         logging.info('start running job %d' % self.id)
