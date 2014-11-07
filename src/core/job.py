@@ -16,7 +16,9 @@ class Job(Configurable):
     def run(self):
         logging.info('start running job %d' % self.id)
         blocks = self.split_input()
-        for i in range(len(blocks)):
+        cnt_mappers = len(blocks)
+        logging.info('Splitting input file done: %d blocks' % cnt_mappers)
+        for i in range(cnt_mappers):
             context = self.make_mapper_task_conf(i, blocks[i])
             logging.info('enqueue task %d for job %d' % (i, self.id))
             self.runner.add_task(context)

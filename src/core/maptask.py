@@ -20,7 +20,7 @@ class MapTask(Configurable):
             if datanode is None:
                 datanode = namenode.create_file(fname)
             else:
-                namenode.create_file(fname, preference=datanode)
+                namenode.create_file(fname, preference=datanode.get_name())
 
             out_files.append(RecordFile(fname, namenode))
         return out_files

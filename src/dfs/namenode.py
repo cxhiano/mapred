@@ -57,10 +57,10 @@ class NameNode(Configurable):
                 return
             datanode = self.datanodes.values()[random.randint(0, n - 1)]
         else:
-            if self.datanodes.get(preference.get_name()) is None:
+            datanode = self.datanodes.get(preference)
+            if datanode is None:
                 raise IOError('Preferred data node not exist')
                 return
-            datanode = preference
 
         datanode.create_file(filename)
 

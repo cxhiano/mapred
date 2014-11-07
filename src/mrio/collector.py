@@ -11,7 +11,6 @@ class OutputCollector:
         return str(key).__hash__() % self.partitions
 
     def put(self, key, value):
-        print key, value
         self.buffer.append((key, value))
         if len(self.buffer) >= SPILL_THESHOLD:
             self.flush()

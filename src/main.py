@@ -44,12 +44,11 @@ def test_map():
     task = MapTask(task_conf, c)
     task.run()
 
-def test_jobrunner():
+if __name__ == '__main__':
     create_input('a.txt', namenode)
     create_input('b.txt', namenode)
+
     Pyro4.config.SERIALIZER = 'marshal'
-    tr = TaskRunner('conf/task_runner.xml')
-    jr = retrieve_object(ns, 'JobRunner')
     jobconf = {
         'mapper': wordcount.map,
         'reducer': wordcount.reduce,
@@ -57,15 +56,6 @@ def test_jobrunner():
         'inputs': ['a.txt', 'b.txt'],
         'output_dir': '.'
     }
-    jr.submit_job(serialize.dumps(jobconf))
-    '''
-    context = Context()
-    serialize.loads(context, jr.get_task())
-    context.namenode = namenode
-    maptask = MapTask(context)
-    Pyro4.config.SERIALIZER = 'serpent'
-    maptask.run()
-    '''
 
-if __name__ == '__main__':
-    test_map()
+    jr = retrieve_object(ns, 'JobRunner')
+    jr.submit_job(serialize.dumps(jobconf))
