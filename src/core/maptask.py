@@ -1,7 +1,6 @@
 from core.configurable import Configurable
 from mrio.collector import OutputCollector
 from mrio.record_file import RecordFile
-from mrio.record_reader import RecordReader
 from utils.filenames import *
 
 class MapTask(Configurable):
@@ -28,11 +27,13 @@ class MapTask(Configurable):
     def run(self):
         out_files = self.create_output_files()
 
-        inp = RecordReader(RecordFile(self.input, self.runner.namenode))
+        input_ = RecordFile(self.input, self.runner.namenode)
         out = OutputCollector(out_files, self.cnt_reducers)
 
-        for record in inp:
-            self.mapper(record.key, record.value, out)
+        line_num = 0
+        for line in input_:
+            self.mapper(line_num, line, out)
+            line_num += 1
 
         out.flush()
 
