@@ -76,6 +76,9 @@ class Job(Configurable):
             datanode.close_file(fname)
             results.append(fname)
 
+        for file_ in input_files:
+            file_.close()
+
         return results
 
     def report_mapper_fail(self, taskid):
