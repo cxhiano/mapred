@@ -39,5 +39,3 @@ class MapTask(Configurable):
 
         for file_ in out_files:
             file_.close()
-
-        return True

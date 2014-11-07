@@ -51,7 +51,7 @@ if __name__ == '__main__':
         'reducer': wordcount.reduce,
         'cnt_reducers': 2,
         'inputs': ['a.txt', 'b.txt'],
-        'output_dir': '.'
+        'output_dir': 'mytask'
     }
 
     jr = retrieve_object(ns, 'JobRunner')

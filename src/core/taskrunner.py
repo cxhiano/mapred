@@ -50,10 +50,10 @@ class TaskRunner(Configurable):
 
         task_conf['tmpdir'] = tmpdir
 
-        task_conf['output_file'] = '%s.%s' % (task_conf['output_dir'], \
+        task_conf['output_fname'] = '%s.%s' % (task_conf['output_dir'], \
             reduce_output(jobid, taskid))
         try:
-            self.namenode.create_file(task_conf['output_file'])
+            self.namenode.create_file(task_conf['output_fname'])
         except IOError:
             logging.error('Error creating output file for reduce \
                 task %d' % taskid)
