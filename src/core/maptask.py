@@ -4,7 +4,7 @@ from mrio.record_reader import RecordReader
 from utils.filenames import *
 
 class MapTask:
-    def __init__(self, context):
+    def __init__(self, task_conf):
         self.context = context.clone()
         self.context.out_files = []
 

@@ -1,12 +1,15 @@
 import types
 
-def loads(obj, skeleton):
-    for attr in skeleton:
-        value = skeleton[attr]
+def loads(dic):
+    ret = {}
+    for key in dic:
+        value = dic[key]
         if isinstance(value, types.CodeType):
-            setattr(obj, attr, types.FunctionType(value, globals()))
+            ret[key] = types.FunctionType(value, globals())
         else:
-            setattr(obj, attr, skeleton[attr])
+            ret[key] = value
+
+    return ret
 
 def dumps(dic):
     ret = {}

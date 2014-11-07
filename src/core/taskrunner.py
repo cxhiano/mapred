@@ -1,6 +1,7 @@
 from Queue import Queue
 from core.maptask import MapTask
 from utils.conf_loader import load_config
+import utils.serialize as serialize
 
 class TaskRunner:
     def __init__(self, conf):
@@ -18,14 +19,13 @@ class TaskRunner:
         self.jobrunner = retrieve_object(self.ns, self.conf['jobrunner'])
 
         while True:
-            context = Context(self.jobrunner.get_task())
-            context.namenode = self.namenode
-            maptask = MapTask(context)
+            task_conf = Context(self.jobrunner.get_task())
+            maptask = MapTask(task_conf, self)
             try:
                 maptask.run()
             except:
                 logging.info('map task %d for job %d failed' % \
-                    (context.taskid, context.jobid))
+                    (task_conf.taskid, task_conf.jobid))
 
             logging.info('map task %d for job %d completed' % \
-                (context.taskid, context.jobid))
+                (task_conf.taskid, task_conf.jobid))
