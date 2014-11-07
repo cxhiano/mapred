@@ -1,13 +1,6 @@
 import types
-from utils.serialize import *
+import utils.serialize as serialize
 
 class Job:
-    def __init__(self, skeleton=None):
-        if not skeleton is None:
-            loads(self, skeleton)
-
-    def validate(self):
-        return True
-
-    def serialize(self):
-        return dumps(self)
+    def __init__(self, jobconf):
+        serialize.loads(self, jobconf)

@@ -13,6 +13,7 @@ class JobRunner:
         self.tasks = Queue(2)
         self.conf = load_config(conf)
         self.jobid = 1
+        self.jobs = {}
 
     def get_task(self):
         context = self.tasks.get()
@@ -56,8 +57,14 @@ class JobRunner:
 
         # generate and dispatch reducer
 
-    def submit_job(self, job_skeleton):
-        job = Job(job_skeleton)
+    def report_mapper_fail(self, jobid, taskid):
+        pass
+
+    def report_mapper_succ(self, jobid, taskid):
+        pass
+
+    def submit_job(self, jobconf):
+        job = Job(jobconf)
         job.id = self.jobid
         self.jobid += 1
         thread.start_new_thread(self.run_job, tuple([job]))

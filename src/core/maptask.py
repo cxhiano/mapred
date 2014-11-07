@@ -34,6 +34,8 @@ class MapTask:
         for file_ in self.context.out_files:
             file_.close()
 
+        return True
+
     def cleanup(self):
         for file_ in self.context.out_files:
             file_.delete()

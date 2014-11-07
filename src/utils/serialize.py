@@ -8,7 +8,18 @@ def loads(obj, skeleton):
         else:
             setattr(obj, attr, skeleton[attr])
 
-def dumps(obj):
+def dumps(dic):
+    ret = {}
+    for key in dic:
+        value = dic[key]
+        if isinstance(value, types.FunctionType):
+            ret[key] = value.func_code
+        else:
+            ret[key] = value
+
+    return ret
+
+def obj_dumps(obj):
     skeleton = {}
     for attr_name in dir(obj):
         if attr_name.startswith('_'):

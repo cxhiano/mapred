@@ -4,6 +4,7 @@ from mrio.record_file import RecordFile
 from core.maptask import MapTask
 from core.context import Context
 from utils.rmi import *
+import utils.serialize as serialize
 from core.jobrunner import JobRunner
 from core.taskrunner import TaskRunner
 from core.job import Job
@@ -42,15 +43,19 @@ if __name__ == '__main__':
   Pyro4.config.SERIALIZER = 'marshal'
   tr = TaskRunner('conf/task_runner.xml')
   jr = retrieve_object(ns, 'JobRunner')
-  job = Job()
-  job.mapper = wordcount.map
-  job.reducer = wordcount.reduce
-  job.cnt_reducers = 2
-  job.inputs = ['a.txt', 'b.txt']
-  job.output_dir = '.'
-  print jr.submit_job(job.serialize())
-  context = Context(jr.get_task())
+  jobconf = {
+    'mapper': wordcount.map,
+    'reducer': wordcount.reduce,
+    'cnt_reducers': 2,
+    'inputs': ['a.txt', 'b.txt'],
+    'output_dir': '.'
+  }
+  jr.submit_job(serialize.dumps(jobconf))
+  '''
+  context = Context()
+  serialize.loads(context, jr.get_task())
   context.namenode = namenode
   maptask = MapTask(context)
   Pyro4.config.SERIALIZER = 'serpent'
   maptask.run()
+  '''

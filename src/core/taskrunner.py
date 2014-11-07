@@ -18,7 +18,14 @@ class TaskRunner:
         self.jobrunner = retrieve_object(self.ns, self.conf['jobrunner'])
 
         while True:
-            context = self.jobrunner.get_task()
+            context = Context(self.jobrunner.get_task())
             context.namenode = self.namenode
             maptask = MapTask(context)
-            maptask.run()
+            try:
+                maptask.run()
+            except:
+                logging.info('map task %d for job %d failed' % \
+                    (context.taskid, context.jobid))
+
+            logging.info('map task %d for job %d completed' % \
+                (context.taskid, context.jobid))
