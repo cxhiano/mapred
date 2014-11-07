@@ -32,6 +32,9 @@ class TaskRunner(Configurable):
         while True:
             task_conf = serialize.loads(self.jobrunner.get_task())
             logging.info('Got task with config %s' % str(task_conf))
+            jobid = task_conf['jobid']
+            taskid = task_conf['taskid']
+
             if is_mapper_task(task_conf):
                 maptask = MapTask(task_conf, self)
 
@@ -39,28 +42,25 @@ class TaskRunner(Configurable):
                     maptask.run()
                 except:
                     logging.info('map task %d for job %d failed: %s' % \
-                        (maptask.taskid, maptask.jobid, sys.exc_info()[1]))
+                        (taskid, jobid, sys.exc_info()[1]))
 
-                    self.jobrunner.report_mapper_fail(maptask.jobid,  \
-                        maptask.taskid)
+                    self.jobrunner.report_mapper_fail(jobid, taskid)
 
                 logging.info('map task %d for job %d completed' % \
-                    (maptask.taskid, maptask.jobid))
+                    (taskid, jobid))
 
-                self.jobrunner.report_mapper_succeed(maptask.jobid, \
-                    maptask.taskid)
+                self.jobrunner.report_mapper_succeed(jobid, taskid)
             else:
-                tmpdir = '%s/%s' % (self.tmpdir, reduce_input( \
-                    task_conf['jobid'], task_conf['taskid']))
+                tmpdir = '%s/%s' % (self.tmpdir, reduce_input(jobid, taskid))
                 try:
                     os.mkdir(tmpdir)
                 except OSError:
                     logging.error('make tmp dir for reduce task %d job %d \
-                        failed: %s' % (task_conf['jobid'],  \
-                                       task_conf['taskid'], \
-                                       sys.exc_info()[1]))
+                        failed: %s' % (taskid, jobid, sys.exc_info()[1]))
 
-                task_conf['tmpdir'] =tmpdir
+                task_conf['tmpdir'] = tmpdir
+                task_conf['output_file'] = '%s.%s' % (task_conf['output_dir'], \
+                    reduce_output(jobid, taskid))
 
                 reducetask = ReduceTask(task_conf, self)
 

@@ -6,3 +6,6 @@ def map_output(jobid, taskid, partitionid):
 
 def reduce_input(jobid, taskid):
     return 'reducein_%d_%d' % (jobid, taskid)
+
+def reduce_output(jobid, taskid):
+    return 'part_%d' % taskid
