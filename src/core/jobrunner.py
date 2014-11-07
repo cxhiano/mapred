@@ -13,6 +13,16 @@ class JobRunner(Configurable):
         self.jobid = 1
         self.jobs = {}
 
+    def test(self):
+        task_conf = {
+            'jobid': 1,
+            'taskid': 1,
+            'reducer': self.jobs[1].reducer,
+            'inputs': ['mapout_1_0_0', 'mapout_1_1_0', 'mapout_1_2_0', 'mapout_1_3_0'],
+            'output_dir': '.'
+        }
+        self.add_task(task_conf)
+
     def get_task(self):
         task_conf = self.tasks.get()
         return serialize.dumps(task_conf)
@@ -35,6 +45,12 @@ class JobRunner(Configurable):
             return
         logging.info('map task %d for job %d succeeded' % (taskid, jobid))
         job.report_mapper_succeed(taskid)
+
+    def report_reducer_fail(self, jobid, taskid):
+        logging.info('reduce task %d for job %d failed' % (taskid, jobid))
+
+    def report_reducer_succeed(self, jobid, taskid):
+        logging.info('reduce task %d for job %d succeeded' % (taskid, jobid))
 
     def submit_job(self, jobconf):
         job = Job(self.jobid, serialize.loads(jobconf), self)

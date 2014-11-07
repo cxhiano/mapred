@@ -16,7 +16,7 @@ def make_block(buf, tmpdir):
     file_.seek(0)
     return line_iter([file_])
 
-def sort_files(inputs, tmpdir, out_file):
+def sort_files(inputs, tmpdir):
     buf = []
     blocks = []
     for line in line_iter(inputs):
@@ -28,4 +28,4 @@ def sort_files(inputs, tmpdir, out_file):
         blocks.append(make_block(buf, tmpdir))
 
     for line in heapq.merge(*blocks):
-        out_file.write(line)
+        yield line

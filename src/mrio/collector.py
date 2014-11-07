@@ -1,4 +1,4 @@
-from .conf import *
+from mrio.conf import *
 from mrio.outfile import MapperOutFile
 
 class OutputCollector:

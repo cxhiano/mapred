@@ -10,6 +10,8 @@
 
     <port>11111</port>
 
+    <tmpdir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/tmp</tmpdir>
+
     <pyroNS>
         <host>localhost</host>
         <port>8888</port>

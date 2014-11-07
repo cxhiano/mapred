@@ -1,15 +1,12 @@
-from mrio.collector import OutputCollector
-from mrio.record_reader import RecordReader
-from mrio.record_file import RecordFile
+import time
+import Pyro4
 from core.maptask import MapTask
+from core.reducetask import ReduceTask
 from core.context import Context
 from utils.rmi import *
 import utils.serialize as serialize
 from core.jobrunner import JobRunner
-from core.taskrunner import TaskRunner
-from core.job import Job
 import example.wordcount as wordcount
-import Pyro4
 
 ns = Pyro4.locateNS(port=8888)
 namenode = retrieve_object(ns, 'NameNode')
@@ -59,3 +56,8 @@ if __name__ == '__main__':
 
     jr = retrieve_object(ns, 'JobRunner')
     jr.submit_job(serialize.dumps(jobconf))
+
+    time.sleep(5)
+
+    jr.test()
+
