@@ -2,6 +2,7 @@ import sys
 import os
 import shutil
 import thread
+import threading
 import Pyro4
 from Queue import Queue
 from utils.rmi import *
@@ -19,8 +20,10 @@ class TaskRunner(Configurable):
     def __init__(self, conf):
         self.load_dict(load_config(conf))
         Pyro4.config.SERIALIZER = "marshal"
+        self.lock = threading.Lock()
 
     def run_maptask(self, task_conf):
+        jobrunner = retrieve_object(self.ns, self.jobrunner)
         jobid = task_conf['jobid']
         taskid = task_conf['taskid']
         maptask = MapTask(task_conf, self)
@@ -33,21 +36,24 @@ class TaskRunner(Configurable):
 
             self.jobrunner.report_mapper_fail(jobid, taskid)
 
+            return
+
         logging.info('map task %d for job %d completed' % \
             (taskid, jobid))
 
-        self.jobrunner.report_mapper_succeed(jobid, taskid)
+        jobrunner.report_mapper_succeed(jobid, taskid)
 
     def run_reducetask(self, task_conf):
+        jobrunner = retrieve_object(self.ns, self.jobrunner)
         jobid = task_conf['jobid']
         taskid = task_conf['taskid']
+
         tmpdir = '%s/%s' % (self.tmpdir, reduce_input(jobid, taskid))
         try:
             os.mkdir(tmpdir)
         except OSError:
             logging.error('make tmp dir for reduce task %d job %d \
                 failed: %s' % (taskid, jobid, sys.exc_info()[1]))
-            return
 
         task_conf['tmpdir'] = tmpdir
 
@@ -58,6 +64,9 @@ class TaskRunner(Configurable):
         except IOError:
             logging.error('Error creating output file for reduce \
                 task %d' % taskid)
+
+            jobrunner.report_reducer_fail(jobid, taskid)
+
             return
 
         reducetask = ReduceTask(task_conf, self)
@@ -66,25 +75,22 @@ class TaskRunner(Configurable):
             reducetask.run()
         except:
             logging.info('reduce task %d for job %d failed: %s' % \
-                (reducetask.taskid, reducetask.jobid, \
-                 sys.exc_info()[1]))
+                (taskid, jobid, sys.exc_info()[1]))
 
-            self.jobrunner.report_reducer_fail(reducetask.jobid,  \
-                reducetask.taskid)
+            jobrunner.report_reducer_fail(jobid, taskid)
+
+            return
 
         logging.info('reduce task %d for job %d completed' % \
-            (reducetask.taskid, reducetask.jobid))
+            (taskid, jobid))
 
-        self.jobrunner.report_reducer_succeed(reducetask.jobid, \
-            reducetask.taskid)
+        jobrunner.report_reducer_succeed(jobid, taskid)
 
         try:
             shutil.rmtree(tmpdir)
         except OSError:
             logging.error('remove tmp dir for reduce task %d job %d \
-                failed: %s' % (task_conf['jobid'],  \
-                               task_conf['taskid'], \
-                               sys.exc_info()[1]))
+                failed: %s' % (jobid, taskid, sys.exc_info()[1]))
 
     def serve(self):
         self.ns = locateNS(self.pyroNS['host'], int(self.pyroNS['port']))
@@ -94,13 +100,13 @@ class TaskRunner(Configurable):
             return
 
         self.namenode = retrieve_object(self.ns, self.namenode)
-        self.jobrunner = retrieve_object(self.ns, self.jobrunner)
+        jobrunner = retrieve_object(self.ns, self.jobrunner)
 
         while True:
-            task_conf = serialize.loads(self.jobrunner.get_task())
+            task_conf = serialize.loads(jobrunner.get_task())
             logging.info('Got task with config %s' % str(task_conf))
 
             if is_mapper_task(task_conf):
-                self.run_maptask(task_conf)
+                thread.start_new_thread(self.run_maptask, tuple([task_conf]))
             else:
-                self.run_reducetask(task_conf)
+                thread.start_new_thread(self.run_reducetask, tuple([task_conf]))

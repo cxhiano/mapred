@@ -11,7 +11,7 @@ import utils.serialize as serialize
 class JobRunner(Configurable):
     def __init__(self, conf):
         self.load_dict(load_config(conf))
-        self.tasks = Queue(2)
+        self.tasks = Queue(1)
         self.jobid = 1
         self.jobs = {}
         self.lock = threading.Lock()
@@ -58,12 +58,14 @@ class JobRunner(Configurable):
         logging.info('reduce task %d for job %d succeeded' % (taskid, jobid))
         job.report_mapper_succeed(taskid)
 
+    @synchronized_method('lock')
     def report_job_succeed(self, jobid):
         job = self.jobs.get(jobid)
         if job is None:
             logging.error('Receive job succeded report with unknown jobid %d' \
                 % jobid)
         logging.info('job %d completed' % jobid)
+        del self.jobs[jobid]
 
     @synchronized_method('lock')
     def submit_job(self, jobconf):

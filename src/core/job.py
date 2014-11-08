@@ -1,5 +1,6 @@
 import types
 import logging
+import shutil
 from core.context import Context
 from core.configurable import Configurable
 from core.tasktracker import TaskTracker
@@ -29,16 +30,16 @@ class Job(Configurable):
 
         for taskid in self.tracker:
             task_conf = self.make_mapper_task_conf(taskid)
-            logging.info('enqueue map task %d for job %d' % (taskid, self.id))
             self.runner.add_task(task_conf)
+            logging.info('enqueued map task %d for job %d' % (taskid, self.id))
 
         self.phase = REDUCE_PHASE
         self.tracker = TaskTracker(self.cnt_reducers)
 
         for taskid in self.tracker:
             task_conf = self.make_reducer_task_conf(taskid)
-            logging.info('enqueue reduce task %d for job %d' % (taskid, self.id))
             self.runner.add_task(task_conf)
+            logging.info('enqueued reduce task %d for job %d' % (taskid, self.id))
 
         self.cleanup()
         self.runner.report_job_succeed(self.id)
