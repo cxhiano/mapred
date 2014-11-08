@@ -40,6 +40,9 @@ class Job(Configurable):
             logging.info('enqueue reduce task %d for job %d' % (taskid, self.id))
             self.runner.add_task(task_conf)
 
+        self.cleanup()
+        self.runner.report_job_succeed(self.id)
+
     def make_mapper_task_conf(self, taskid):
         return {
             'jobid': self.id,
@@ -94,5 +97,19 @@ class Job(Configurable):
         self.tracker.report_succeeded(taskid)
 
     def cleanup(self):
-        pass
+        namenode = self.runner.namenode
+        for i in range(self.cnt_mappers):
+            fname = map_input(self.id, i)
 
+            try:
+                namenode.delete_file(fname)
+            except IOError:
+                logging.warning('Error deleting file %s' % fname)
+
+            for j in range(self.cnt_reducers):
+                fname = map_output(self.id, i, j)
+
+                try:
+                    namenode.delete_file(fname)
+                except IOError:
+                    logging.warning('Error deleting file %s' % fname)

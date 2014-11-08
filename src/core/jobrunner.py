@@ -1,9 +1,11 @@
 import thread
+import threading
 from Queue import Queue
 from core.job import Job
 from core.configurable import Configurable
 from utils.conf_loader import load_config
 from utils.rmi import *
+from utils.sync import synchronized_method
 import utils.serialize as serialize
 
 class JobRunner(Configurable):
@@ -12,6 +14,7 @@ class JobRunner(Configurable):
         self.tasks = Queue(2)
         self.jobid = 1
         self.jobs = {}
+        self.lock = threading.Lock()
 
     def get_task(self):
         task_conf = self.tasks.get()
@@ -31,17 +34,38 @@ class JobRunner(Configurable):
     def report_mapper_succeed(self, jobid, taskid):
         job = self.jobs.get(jobid)
         if job is None:
-            logging.error('Receive mapper succeed report with unknown jobid %d' % jobid)
+            logging.error('Receive mapper succeed report with unknown \
+                jobid %d' % jobid)
             return
         logging.info('map task %d for job %d succeeded' % (taskid, jobid))
         job.report_mapper_succeed(taskid)
 
     def report_reducer_fail(self, jobid, taskid):
+        job = self.jobs.get(jobid)
+        if job is None:
+            logging.error('Receive reducer failed report with unknown \
+                jobid %d' % jobid)
+            return
         logging.info('reduce task %d for job %d failed' % (taskid, jobid))
+        job.report_mapper_fail(taskid)
 
     def report_reducer_succeed(self, jobid, taskid):
+        job = self.jobs.get(jobid)
+        if job is None:
+            logging.error('Receive reducer succeeded report with unknown \
+                jobid %d' % jobid)
+            return
         logging.info('reduce task %d for job %d succeeded' % (taskid, jobid))
+        job.report_mapper_succeed(taskid)
 
+    def report_job_succeed(self, jobid):
+        job = self.jobs.get(jobid)
+        if job is None:
+            logging.error('Receive job succeded report with unknown jobid %d' \
+                % jobid)
+        logging.info('job %d completed' % jobid)
+
+    @synchronized_method('lock')
     def submit_job(self, jobconf):
         job = Job(self.jobid, serialize.loads(jobconf), self)
         self.jobs[self.jobid] = job

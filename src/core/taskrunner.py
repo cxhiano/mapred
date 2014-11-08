@@ -1,6 +1,7 @@
 import sys
 import os
 import shutil
+import thread
 import Pyro4
 from Queue import Queue
 from utils.rmi import *
@@ -61,8 +62,8 @@ class TaskRunner(Configurable):
 
         reducetask = ReduceTask(task_conf, self)
 
-        reducetask.run()
-        '''
+        try:
+            reducetask.run()
         except:
             logging.info('reduce task %d for job %d failed: %s' % \
                 (reducetask.taskid, reducetask.jobid, \
@@ -73,7 +74,6 @@ class TaskRunner(Configurable):
 
         logging.info('reduce task %d for job %d completed' % \
             (reducetask.taskid, reducetask.jobid))
-        '''
 
         self.jobrunner.report_reducer_succeed(reducetask.jobid, \
             reducetask.taskid)

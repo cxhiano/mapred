@@ -46,13 +46,22 @@ if __name__ == '__main__':
     create_input('b.txt', namenode)
 
     Pyro4.config.SERIALIZER = 'marshal'
-    jobconf = {
+    jobconf1 = {
         'mapper': wordcount.map,
         'reducer': wordcount.reduce,
-        'cnt_reducers': 4,
+        'cnt_reducers': 1,
+        'inputs': ['a.txt', 'b.txt'],
+        'output_dir': 'mytask1'
+    }
+
+    jobconf2 = {
+        'mapper': wordcount.map,
+        'reducer': wordcount.reduce,
+        'cnt_reducers': 2,
         'inputs': ['a.txt', 'b.txt'],
         'output_dir': 'mytask2'
     }
 
     jr = retrieve_object(ns, 'JobRunner')
-    jr.submit_job(serialize.dumps(jobconf))
+    jr.submit_job(serialize.dumps(jobconf1))
+    jr.submit_job(serialize.dumps(jobconf2))
