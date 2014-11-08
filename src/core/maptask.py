@@ -1,3 +1,5 @@
+import sys
+import logging
 from core.configurable import Configurable
 from mrio.collector import OutputCollector
 from mrio.record_file import RecordFile
@@ -39,3 +41,13 @@ class MapTask(Configurable):
 
         for file_ in out_files:
             file_.close()
+
+    def cleanup(self):
+        for i in range(self.cnt_reducers):
+            fname = map_output(self.jobid, self.taskid, i)
+            try:
+                self.runner.namenode.delete_file(fname)
+            except IOError:
+                logging.warning('Error deleting file %s in cleanup. Jobid: %d, \
+                    Taskid: %d: %s' % (fname, self.jobid, self.taskid, \
+                                       sys.exc_info()[1]))

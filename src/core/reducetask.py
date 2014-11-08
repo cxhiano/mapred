@@ -33,3 +33,11 @@ class ReduceTask(Configurable):
 
         out.flush()
         output_file.close()
+
+    def cleanup(self):
+        try:
+            self.runner.namenode.delete_file(self.output_fname)
+        except IOError:
+            logging.warning('Error deleting file %s in cleanup. Jobid: %d, \
+                Taskid: %d: %s' % (self.output_fname, self.jobid, self.taskid, \
+                                   sys.exc_info()[1]))

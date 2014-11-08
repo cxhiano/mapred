@@ -45,7 +45,9 @@ class TaskRunner(Configurable):
             logging.info('map task %d for job %d failed: %s' % \
                 (taskid, jobid, sys.exc_info()[1]))
 
-            self.jobrunner.report_mapper_fail(jobid, taskid)
+            maptask.cleanup()
+
+            jobrunner.report_mapper_fail(jobid, taskid)
 
             return
 
@@ -64,7 +66,7 @@ class TaskRunner(Configurable):
         try:
             os.mkdir(tmpdir)
         except OSError:
-            logging.error('make tmp dir for reduce task %d job %d \
+            logging.warning('make tmp dir for reduce task %d job %d \
                 failed: %s' % (taskid, jobid, sys.exc_info()[1]))
 
         task_conf['tmpdir'] = tmpdir
@@ -88,6 +90,8 @@ class TaskRunner(Configurable):
         except:
             logging.info('reduce task %d for job %d failed: %s' % \
                 (taskid, jobid, sys.exc_info()[1]))
+
+            reducetask.cleanup()
 
             jobrunner.report_reducer_fail(jobid, taskid)
 
