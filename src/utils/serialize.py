@@ -5,7 +5,8 @@ def loads(dic):
     for key in dic:
         value = dic[key]
         if isinstance(value, types.CodeType):
-            ret[key] = types.FunctionType(value, globals())
+            ret[key] = types.FunctionType(value, {
+                '__builtins__': __builtins__ })
         else:
             ret[key] = value
 
