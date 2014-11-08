@@ -42,10 +42,8 @@ def test_map():
     task.run()
 
 if __name__ == '__main__':
-    '''
     create_input('a.txt', namenode)
     create_input('b.txt', namenode)
-    '''
 
     Pyro4.config.SERIALIZER = 'marshal'
     jobconf = {

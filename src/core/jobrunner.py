@@ -13,16 +13,6 @@ class JobRunner(Configurable):
         self.jobid = 1
         self.jobs = {}
 
-    def test(self):
-        task_conf = {
-            'jobid': 1,
-            'taskid': 1,
-            'reducer': self.jobs[1].reducer,
-            'inputs': ['mapout_1_0_0', 'mapout_1_1_0', 'mapout_1_2_0', 'mapout_1_3_0'],
-            'output_dir': '.'
-        }
-        self.add_task(task_conf)
-
     def get_task(self):
         task_conf = self.tasks.get()
         return serialize.dumps(task_conf)

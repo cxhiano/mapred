@@ -92,3 +92,7 @@ class Job(Configurable):
 
     def report_reducer_succeed(self, taskid):
         self.tracker.report_succeeded(taskid)
+
+    def cleanup(self):
+        pass
+

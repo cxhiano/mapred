@@ -3,11 +3,13 @@ import traceback
 import thread
 import random
 import logging
+import threading
 import Pyro4
 from core.configurable import Configurable
+from dfs.conf import *
 from utils.conf_loader import load_config
+from utils.sync import synchronized_method
 from utils.rmi import *
-from .conf import *
 
 class NameNode(Configurable):
     """ The name node of distributed file system """
@@ -16,6 +18,7 @@ class NameNode(Configurable):
         self.load_dict(load_config(conf))
         self.datanodes = {}
         self.files = {}
+        self.lock = threading.RLock()
 
     def run_pyro_naming_server(self):
         Pyro4.naming.startNSloop(self.pyroNS['host'], int(self.pyroNS['port']))
@@ -36,19 +39,22 @@ class NameNode(Configurable):
         daemon = export(self)
         daemon.requestLoop()
 
+    @synchronized_method('lock')
     def create_file_meta(self, filename, datanode):
         if filename in self.files:
             raise IOError('File already exists!')
         self.files[filename] = datanode
 
+    @synchronized_method('lock')
     def delete_file_meta(self, filename):
         if not filename in self.files:
             raise IOError('File not found!')
         del self.files[filename]
 
     def create_file(self, filename, preference=None):
-        if filename in self.files:
-            raise IOError('File already exists!')
+        with self.lock:
+            if filename in self.files:
+                raise IOError('File already exists!')
 
         if preference is None:
             n = len(self.datanodes)
@@ -67,12 +73,14 @@ class NameNode(Configurable):
         return datanode
 
     def delete_file(self, filename):
-        if not filename in self.files:
-            logging.warning('%s does not exist' % datanode)
-            return
+        with self.lock:
+            if not filename in self.files:
+                logging.warning('%s does not exist' % datanode)
+                return
 
         self.files[filename].delete_file(filename)
 
+    @synchronized_method('lock')
     def get_file(self, filename):
         if not filename in self.files:
             raise IOError('File Not Found')

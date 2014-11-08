@@ -1,8 +1,10 @@
 import os
 import logging
+import threading
 import Pyro4
 from core.configurable import Configurable
 from utils.conf_loader import load_config
+from utils.sync import synchronized_method
 from utils.rmi import *
 
 def openfile(mode):
@@ -30,6 +32,7 @@ class DataNode(Configurable):
     def __init__(self, conf_file):
         self.load_dict(load_config(conf_file))
         self.files = {}
+        self.lock = threading.RLock()
 
     def get_name(self):
         return self.name
@@ -50,6 +53,7 @@ class DataNode(Configurable):
     def real_filename(self, filename):
         return ''.join([self.datadir, filename])
 
+    @synchronized_method('lock')
     def create_file(self, filename):
         real_fn = self.real_filename(filename)
         logging.debug('Creating file at %s' % real_fn)
@@ -60,6 +64,7 @@ class DataNode(Configurable):
 
         self.namenode.create_file_meta(filename, self)
 
+    @synchronized_method('lock')
     def delete_file(self, filename):
         if not filename in self.files:
             logging.warning('%s does not exist' % filename)
@@ -72,23 +77,28 @@ class DataNode(Configurable):
         del self.files[filename]
         self.namenode.delete_file_meta(filename)
 
+    @synchronized_method('lock')
     @openfile('r')
     def read_file(self, file_, nbytes):
         return file_.read(nbytes)
 
+    @synchronized_method('lock')
     @openfile('r')
     def readline_file(self, file_):
         return file_.readline()
 
+    @synchronized_method('lock')
     @openfile('w')
     def write_file(self, file_, buf):
         file_.write(buf)
         return len(buf)
 
+    @synchronized_method('lock')
     @openfile('rw')
     def seek_file(self, file_, offset):
         file_.seek(offset)
 
+    @synchronized_method('lock')
     @openfile('rw')
     def close_file(self, file_):
         file_.close()
