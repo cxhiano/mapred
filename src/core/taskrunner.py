@@ -10,8 +10,16 @@ from utils.filenames import *
 from core.configurable import Configurable
 from core.maptask import MapTask
 from core.reducetask import ReduceTask
+from core.conf import *
 from utils.conf_loader import load_config
 import utils.serialize as serialize
+
+def _slot(method):
+    def wrapper(self, *args, **kwargs):
+        ret = method(self, *args, **kwargs)
+        self.slots.put(True)
+        return ret
+    return wrapper
 
 def is_mapper_task(task_conf):
     return task_conf.has_key('mapper')
@@ -20,8 +28,11 @@ class TaskRunner(Configurable):
     def __init__(self, conf):
         self.load_dict(load_config(conf))
         Pyro4.config.SERIALIZER = "marshal"
-        self.lock = threading.Lock()
+        self.slots = Queue()
+        for i in range(TASK_RUNNER_SLOTS):
+            self.slots.put(True)
 
+    @_slot
     def run_maptask(self, task_conf):
         jobrunner = retrieve_object(self.ns, self.jobrunner)
         jobid = task_conf['jobid']
@@ -43,6 +54,7 @@ class TaskRunner(Configurable):
 
         jobrunner.report_mapper_succeed(jobid, taskid)
 
+    @_slot
     def run_reducetask(self, task_conf):
         jobrunner = retrieve_object(self.ns, self.jobrunner)
         jobid = task_conf['jobid']
@@ -102,7 +114,7 @@ class TaskRunner(Configurable):
         self.namenode = retrieve_object(self.ns, self.namenode)
         jobrunner = retrieve_object(self.ns, self.jobrunner)
 
-        while True:
+        while self.slots.get():
             task_conf = serialize.loads(jobrunner.get_task())
             logging.info('Got task with config %s' % str(task_conf))
 

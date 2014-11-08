@@ -1,7 +1,7 @@
 import types
 import logging
 import shutil
-from core.context import Context
+from core.conf import *
 from core.configurable import Configurable
 from core.tasktracker import TaskTracker
 from mrio.record_file import RecordFile
@@ -64,7 +64,7 @@ class Job(Configurable):
         }
 
     def split_input(self):
-        splitter = Splitter(5)
+        splitter = Splitter(RECORDS_PER_BLOCK)
         results = []
         input_files = []
         for fname in self.inputs:

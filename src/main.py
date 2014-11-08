@@ -3,9 +3,9 @@ import Pyro4
 from core.maptask import MapTask
 from core.reducetask import ReduceTask
 from core.context import Context
+from core.jobrunner import JobRunner
 from utils.rmi import *
 import utils.serialize as serialize
-from core.jobrunner import JobRunner
 import example.wordcount as wordcount
 
 ns = Pyro4.locateNS(port=8888)
