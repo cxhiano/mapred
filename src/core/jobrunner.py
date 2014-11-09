@@ -15,58 +15,64 @@ class JobRunner(Configurable):
         super(JobRunner, self).__init__(load_config(conf))
         self.config_pyroNS()
 
-        self.tasks = Queue(JOB_RUNNER_SLOTS)
+        self.task_queue = Queue(JOB_RUNNER_SLOTS)
+        self.running_tasks = {}
+        self.task_runners = {}
         self.jobid = 1
         self.jobs = {}
-        self.lock = threading.Lock()
+        self.__lock__ = threading.RLock()
 
     def get_name(self):
         return self.name
 
-    def get_task(self):
-        task_conf = self.tasks.get()
+    def get_task(self, task_runner):
+        task_conf = self.task_queue.get()
+        '''
+        jobid, taskid = task_conf['jobid'], task_conf['taskid']
+        self.running_tasks[(jobid, taskid)] = task_runner
+        if not task_runner in self.task_runners:
+            logging.info('receive get task request from new task runner %s'
+                % task_runner)
+            self.task_runners[task_runner] = retrieve_object(self.ns,
+                task_runner)
+        '''
         return serialize.dumps(task_conf)
 
     def add_task(self, task_conf):
-        self.tasks.put(task_conf)
+        self.task_queue.put(task_conf)
 
-    def report_mapper_fail(self, jobid, taskid):
+    @synchronized_method('__lock__')
+    def check_task_runners(self):
+        for name in self.task_runners.keys():
+            task_runner = self.task_runners[name]
+            try:
+                task_runner.heartbeat()
+            except:
+                logging.info('%s does not response', name)
+                del self.task_runners[name]
+                for jobid, taskid in self.running_tasks:
+                    if self.running_tasks[(jobid, taskid)] == name:
+                        self.report_task_failed(jobid, taskid)
+
+    @synchronized_method('__lock__')
+    def report_task_fail(self, jobid, taskid):
         job = self.jobs.get(jobid)
         if job is None:
-            logging.error('Receive mapper fail report with unknown jobid %d'
+            logging.error('Receive task fail report with unknown jobid %d'
                 % jobid)
             return
-        logging.info('map task %d for job %d failed' % (taskid, jobid))
-        job.report_mapper_fail(taskid)
+        job.report_task_fail(taskid)
 
-    def report_mapper_succeed(self, jobid, taskid):
+    @synchronized_method('__lock__')
+    def report_task_succeed(self, jobid, taskid):
         job = self.jobs.get(jobid)
         if job is None:
-            logging.error('Receive mapper succeed report with unknown \
+            logging.error('Receive task succeed report with unknown \
                 jobid %d' % jobid)
             return
-        logging.info('map task %d for job %d succeeded' % (taskid, jobid))
-        job.report_mapper_succeed(taskid)
+        job.report_task_succeed(taskid)
 
-    def report_reducer_fail(self, jobid, taskid):
-        job = self.jobs.get(jobid)
-        if job is None:
-            logging.error('Receive reducer failed report with unknown \
-                jobid %d' % jobid)
-            return
-        logging.info('reduce task %d for job %d failed' % (taskid, jobid))
-        job.report_mapper_fail(taskid)
-
-    def report_reducer_succeed(self, jobid, taskid):
-        job = self.jobs.get(jobid)
-        if job is None:
-            logging.error('Receive reducer succeeded report with unknown \
-                jobid %d' % jobid)
-            return
-        logging.info('reduce task %d for job %d succeeded' % (taskid, jobid))
-        job.report_mapper_succeed(taskid)
-
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     def report_job_succeed(self, jobid):
         job = self.jobs.get(jobid)
         if job is None:
@@ -75,7 +81,7 @@ class JobRunner(Configurable):
         logging.info('job %d completed' % jobid)
         del self.jobs[jobid]
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     def report_job_fail(self, jobid):
         job = self.jobs.get(jobid)
         if job is None:
@@ -84,7 +90,7 @@ class JobRunner(Configurable):
         logging.info('job %d failed' % jobid)
         del self.jobs[jobid]
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     def submit_job(self, jobconf):
         try:
             job = Job(self.jobid, serialize.loads(jobconf), self)

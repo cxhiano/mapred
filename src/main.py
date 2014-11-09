@@ -25,21 +25,6 @@ def create_input(fname, namenode):
     datanode.write_file(fname, 0, content)
     datanode.close_file(fname)
 
-def test_map():
-    create_input('a.txt', namenode)
-    task_conf = {
-        'jobid': 1,
-        'taskid': 1,
-        'mapper': wordcount.map,
-        'cnt_reducers': 2,
-        'input': 'a.txt'
-    }
-    c = Context()
-    c.namenode = namenode
-
-    task = MapTask(task_conf, c)
-    task.run()
-
 if __name__ == '__main__':
     create_input('a.txt', namenode)
     create_input('b.txt', namenode)

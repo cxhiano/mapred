@@ -52,7 +52,7 @@ class ReduceTask(Task):
 
         logging.info('%s completed' % self.name)
 
-        self.jobrunner.report_reducer_succeed(self.jobid, self.taskid)
+        self.jobrunner.report_task_succeed(self.jobid, self.taskid)
 
         try:
             shutil.rmtree(self.tmpdir)
@@ -65,7 +65,7 @@ class ReduceTask(Task):
     def fail(self):
         logging.info('%s failed' % self.name)
         self.cleanup()
-        self.jobrunner.report_reducer_fail(self.jobid, self.taskid)
+        self.jobrunner.report_task_fail(self.jobid, self.taskid)
 
     def cleanup(self):
         try:

@@ -54,7 +54,7 @@ class TaskRunner(Configurable):
     def serve(self):
         while True:
             token = self.slots.get()
-            task_conf = serialize.loads(self.jobrunner.get_task())
+            task_conf = serialize.loads(self.jobrunner.get_task(self.name))
             logging.info('Got task with config %s, run on slot %d' %
                 (str(task_conf), token))
 

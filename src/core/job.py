@@ -17,7 +17,6 @@ class Job(Configurable):
         super(Job, self).__init__(jobconf)
         self.runner = runner
         self.id = jobid
-        self.tasks = {}
         self.open_files = []
         self.result_files = []
 
@@ -169,16 +168,10 @@ class Job(Configurable):
                 datanode.create_file(fname)
                 self.open_files.append(fname)
 
-    def report_mapper_fail(self, taskid):
+    def report_task_fail(self, taskid):
         self.list.report_failed(taskid)
 
-    def report_mapper_succeed(self, taskid):
-        self.list.report_succeeded(taskid)
-
-    def report_reducer_fail(self, taskid):
-        self.list.report_failed(taskid)
-
-    def report_reducer_succeed(self, taskid):
+    def report_task_succeed(self, taskid):
         self.list.report_succeeded(taskid)
 
     def cleanup(self):

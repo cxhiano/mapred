@@ -41,14 +41,14 @@ class MapTask(Task):
 
         logging.info('%s completed' % self.name)
 
-        self.jobrunner.report_mapper_succeed(self.jobid, self.taskid)
+        self.jobrunner.report_task_succeed(self.jobid, self.taskid)
 
         return True
 
     def fail(self):
         logging.info('%s failed: %s' % (self.name, sys.exc_info()[1]))
         self.cleanup()
-        self.jobrunner.report_mapper_fail(self.jobid, self.taskid)
+        self.jobrunner.report_task_fail(self.jobid, self.taskid)
 
     def cleanup(self):
         for i in range(self.cnt_reducers):
