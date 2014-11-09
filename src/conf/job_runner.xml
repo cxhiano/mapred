@@ -6,7 +6,7 @@
 
     <host>localhost</host>
 
-    <port>22222</port>
+    <port>21222</port>
 
     <pyroNS>
         <host>localhost</host>

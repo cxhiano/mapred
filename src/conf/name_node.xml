@@ -4,7 +4,7 @@
 
     <host>localhost</host>
 
-    <port>12345</port>
+    <port>12354</port>
 
     <pyroNS>
         <host>localhost</host>

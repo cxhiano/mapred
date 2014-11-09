@@ -43,13 +43,16 @@ class MapTask(Task):
                 file_.close()
 
         except:
-            self.fail()
+            logging.info('%s error when running: %s' % (self.name,
+                sys.exc_info()[1]))
 
-            return
+            return False
 
         logging.info('%s completed' % self.name)
 
         self.jobrunner.report_mapper_succeed(self.jobid, self.taskid)
+
+        return True
 
     def fail(self):
         logging.info('%s failed: %s' % (self.name, sys.exc_info()[1]))
@@ -61,6 +64,6 @@ class MapTask(Task):
             fname = map_output(self.jobid, self.taskid, i)
             try:
                 self.namenode.delete_file(fname)
-            except IOError:
+            except:
                 logging.warning('%s error deleting file %s in cleanup. %s' %
                     (self.name, fname, sys.exc_info()[1]))

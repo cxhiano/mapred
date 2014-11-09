@@ -7,8 +7,8 @@ def map(key, value, out):
         if len(word) > 0:
             out.put(word, 1)
 
-    if random.randint(0, 3) == 0:
-        print 'random failed!'
+    if random.randint(0, 8) == 0:
+        print 'random failed'
         while True:
             pass
 
@@ -21,4 +21,5 @@ def reduce(key, values, out):
     out.put(key, cnt)
 
     if random.randint(0, 50) == 0:
+        print 'random failed'
         raise Exception('random failed!')

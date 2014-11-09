@@ -60,7 +60,7 @@ class DataNode(Configurable):
         logging.debug('Creating file at %s' % real_fn)
 
         if filename in self.files:
-            raise IOError('File already exists!')
+            raise IOError('File %s already exists!' % filename)
         self.files[filename] = open(real_fn, 'w')
 
         self.namenode.create_file_meta(filename, self)

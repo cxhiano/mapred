@@ -12,19 +12,18 @@ from utils.filenames import *
 class ReduceTask(Task):
     def __init__(self, task_conf):
         super(ReduceTask, self).__init__(task_conf)
+
         self.name = 'reduce task %d for job %d' % (self.taskid, self.jobid)
+        self.tmpdir = '%s/%s' % (self.tmpdir, reduce_input(self.jobid, self.taskid))
+        self.output_fname = '%s.%s' % (self.output_dir, reduce_output(self.jobid,
+            self.taskid))
 
     def setup(self):
-        self.tmpdir = '%s/%s' % (self.tmpdir, reduce_input(self.jobid, self.taskid))
-
         try:
             os.mkdir(self.tmpdir)
         except OSError:
             logging.info('%s cannot create dir %s: %s' % (self.name, self.tmpdir,
                 sys.exc_info()[1]))
-
-        self.output_fname = '%s.%s' % (self.output_dir, reduce_output(self.jobid,
-            self.taskid))
 
         self.namenode.create_file(self.output_fname)
 
@@ -32,9 +31,9 @@ class ReduceTask(Task):
         try:
             self.setup()
         except:
-            logging.info('%s setup failed' % self.name)
-            self.fail()
-            return
+            logging.info('%s error when setting up: %s' % (self.name,
+                sys.exc_info()[1]))
+            return False
 
         try:
             inputs = [RecordFile(fname, self.namenode) for fname in \
@@ -58,8 +57,9 @@ class ReduceTask(Task):
             out.flush()
             output_file.close()
         except:
-            self.fail()
-            return
+            logging.info('%s error when running: %s' % (self.name,
+                sys.exc_info()[1]))
+            return False
 
         logging.info('%s completed' % self.name)
 
@@ -71,6 +71,8 @@ class ReduceTask(Task):
             logging.warning('%s: remove tmp dir failed: %s' %
                 (self.name, sys.exc_info()[1]))
 
+        return True
+
     def fail(self):
         logging.info('%s failed' % self.name)
         self.cleanup()
@@ -78,8 +80,9 @@ class ReduceTask(Task):
 
     def cleanup(self):
         try:
+            logging.debug('%s: trying to delete %s' % (self.name, self.output_fname))
             self.namenode.delete_file(self.output_fname)
-        except IOError:
+        except:
             logging.warning('%s: Error deleting file %s in cleanup: %s' %
                 (self.name, self.output_fname, sys.exc_info()[1]))
 

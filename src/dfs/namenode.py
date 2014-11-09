@@ -53,7 +53,7 @@ class NameNode(Configurable):
     def create_file(self, filename, preference=None):
         with self.lock:
             if filename in self.files:
-                raise IOError('File already exists!')
+                raise IOError('File %s already exists!' % filename)
 
         if preference is None:
             n = len(self.datanodes)
@@ -74,7 +74,7 @@ class NameNode(Configurable):
     def delete_file(self, filename):
         with self.lock:
             if not filename in self.files:
-                logging.warning('%s does not exist' % datanode)
+                logging.warning('%s does not exist' % filename)
                 return
 
         self.files[filename].delete_file(filename)

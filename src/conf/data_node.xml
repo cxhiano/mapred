@@ -4,7 +4,7 @@
 
     <host>localhost</host>
 
-    <port>54321</port>
+    <port>53421</port>
 
     <datadir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/data/</datadir>
 
