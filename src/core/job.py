@@ -3,7 +3,7 @@ import logging
 import shutil
 from core.conf import *
 from core.configurable import Configurable
-from core.tasktracker import TaskTracker
+from core.tasklist import TaskList
 from mrio.record_file import RecordFile
 from utils.splitter import Splitter
 from utils.filenames import *
@@ -26,17 +26,17 @@ class Job(Configurable):
         logging.info('Splitting input file done: %d blocks' % self.cnt_mappers)
 
         self.phase = MAP_PHASE
-        self.tracker = TaskTracker(self.cnt_mappers)
+        self.list = TaskList(self.cnt_mappers)
 
-        for taskid in self.tracker:
+        for taskid in self.list:
             task_conf = self.make_mapper_task_conf(taskid)
             self.runner.add_task(task_conf)
             logging.info('enqueued map task %d for job %d' % (taskid, self.id))
 
         self.phase = REDUCE_PHASE
-        self.tracker = TaskTracker(self.cnt_reducers)
+        self.list = TaskList(self.cnt_reducers)
 
-        for taskid in self.tracker:
+        for taskid in self.list:
             task_conf = self.make_reducer_task_conf(taskid)
             self.runner.add_task(task_conf)
             logging.info('enqueued reduce task %d for job %d' % (taskid, self.id))
@@ -90,16 +90,16 @@ class Job(Configurable):
         return results
 
     def report_mapper_fail(self, taskid):
-        self.tracker.report_failed(taskid)
+        self.list.report_failed(taskid)
 
     def report_mapper_succeed(self, taskid):
-        self.tracker.report_succeeded(taskid)
+        self.list.report_succeeded(taskid)
 
     def report_reducer_fail(self, taskid):
-        self.tracker.report_failed(taskid)
+        self.list.report_failed(taskid)
 
     def report_reducer_succeed(self, taskid):
-        self.tracker.report_succeeded(taskid)
+        self.list.report_succeeded(taskid)
 
     def cleanup(self):
         namenode = self.runner.namenode

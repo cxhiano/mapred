@@ -8,6 +8,7 @@ from utils.filenames import *
 class MapTask(Task):
     def __init__(self, task_conf):
         super(MapTask, self).__init__(task_conf)
+        self.name = 'map task %d for job %d' % (self.taskid, self.jobid)
         self.out_files = []
 
     def create_output_files(self):
@@ -42,19 +43,18 @@ class MapTask(Task):
                 file_.close()
 
         except:
-            logging.info('map task %d for job %d failed: %s' % \
-                (self.taskid, self.jobid, sys.exc_info()[1]))
-
-            self.cleanup()
-
-            self.jobrunner.report_mapper_fail(self.jobid, self.taskid)
+            self.fail()
 
             return
 
-        logging.info('map task %d for job %d completed' % \
-            (self.taskid, self.jobid))
+        logging.info('%s completed' % self.name)
 
         self.jobrunner.report_mapper_succeed(self.jobid, self.taskid)
+
+    def fail(self):
+        logging.info('%s failed: %s' % (self.name, sys.exc_info()[1]))
+        self.cleanup()
+        self.jobrunner.report_mapper_fail(self.jobid, self.taskid)
 
     def cleanup(self):
         for i in range(self.cnt_reducers):
@@ -62,11 +62,5 @@ class MapTask(Task):
             try:
                 self.namenode.delete_file(fname)
             except IOError:
-                logging.warning('Error deleting file %s in cleanup. Jobid: %d, \
-                    Taskid: %d: %s' % (fname, self.jobid, self.taskid, \
-                                       sys.exc_info()[1]))
-    def kill(self):
-        logging.info('map task %d for job %d failed: %s' % \
-            (self.taskid, self.jobid, sys.exc_info()[1]))
-
-        super(MapTask, self).kill(self)
+                logging.warning('%s error deleting file %s in cleanup. %s' %
+                    (self.name, fname, sys.exc_info()[1]))

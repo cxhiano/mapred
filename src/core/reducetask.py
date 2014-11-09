@@ -9,8 +9,29 @@ from utils.filenames import *
 class ReduceTask(Task):
     def __init__(self, task_conf):
         super(ReduceTask, self).__init__(task_conf)
+        self.name = 'reduce task %d for job %d' % (self.taskid, self.jobid)
 
     def run(self):
+        tmpdir = '%s/%s' % (self.tmpdir, reduce_input(self.jobid, self.taskid))
+        try:
+            os.mkdir(tmpdir)
+        except OSError:
+            logging.warning('make tmp dir for %s failed: %s' % (self.name,
+                sys.exc_info()[1]))
+
+        output_fname = '%s.%s' % (self.output_dir, reduce_output(self.jobid,
+            self.taskid))
+        try:
+            self.namenode.create_file(task_conf['output_fname'])
+        except IOError:
+            logging.error('%s error creating output file' % self.name)
+
+            jobrunner.report_reducer_fail(jobid, taskid)
+
+            return
+
+        reducetask = ReduceTask(task_conf, self)
+
         inputs = [RecordFile(fname, self.runner.namenode) for fname in \
             self.inputs]
         reduce_input = sort_files(inputs, self.tmpdir)
@@ -32,6 +53,9 @@ class ReduceTask(Task):
 
         out.flush()
         output_file.close()
+
+    def fail(self):
+        pass
 
     def cleanup(self):
         try:

@@ -5,11 +5,12 @@ import thread
 import threading
 import time
 import Pyro4
-from Queue import Queue
+from multiprocessing import Queue
 from core.conf import *
 from core.configurable import Configurable
 from core.maptask import MapTask
 from core.reducetask import ReduceTask
+from core.tasktracker import TaskTracker
 from utils.rmi import *
 from utils.filenames import *
 from utils.conf_loader import load_config
@@ -28,7 +29,7 @@ class TaskRunner(Configurable):
 
         self.slots = Queue()
         for i in range(TASK_RUNNER_SLOTS):
-            self.slots.put(i)
+            self.slots.put(True)
 
         self.tasks = {}
         self.__lock__ = threading.Lock()
@@ -43,32 +44,6 @@ class TaskRunner(Configurable):
         self.jobrunner = retrieve_object(ns, self.jobrunner)
 
     def run_reducetask(self, task_conf):
-        jobrunner = retrieve_object(self.ns, self.jobrunner)
-        jobid = task_conf['jobid']
-        taskid = task_conf['taskid']
-
-        tmpdir = '%s/%s' % (self.tmpdir, reduce_input(jobid, taskid))
-        try:
-            os.mkdir(tmpdir)
-        except OSError:
-            logging.warning('make tmp dir for reduce task %d job %d \
-                failed: %s' % (taskid, jobid, sys.exc_info()[1]))
-
-        task_conf['tmpdir'] = tmpdir
-
-        task_conf['output_fname'] = '%s.%s' % (task_conf['output_dir'], \
-            reduce_output(jobid, taskid))
-        try:
-            self.namenode.create_file(task_conf['output_fname'])
-        except IOError:
-            logging.error('Error creating output file for reduce \
-                task %d' % taskid)
-
-            jobrunner.report_reducer_fail(jobid, taskid)
-
-            return
-
-        reducetask = ReduceTask(task_conf, self)
 
         try:
             reducetask.run()
@@ -95,31 +70,19 @@ class TaskRunner(Configurable):
 
     @synchronized_method('__lock__')
     def kill_task(self, jobid, taskid):
-        task = self.tasks.get(jobid, taskid)
-        if task is None:
+        tracker = self.tasks.get((jobid, taskid))
+        if tracker is None:
             logging.warning('kill_task: jobid %d taskid %d does not exist' %
                 (jobid, taskid))
             return
-        task.kill()
-        self.slots.put(task.__token__)
-        del self.tasks[(jobid, taskid)]
+        tracker.kill_task()
 
     @synchronized_method('__lock__')
-    def reap_tasks(self):
-        for task in self.tasks.values():
-            if not task.alive():
-                logging.debug('reaped task with jobid %d taskid %d' %
-                    (task.jobid, task.taskid))
-                self.slots.put(task.__token__)
-                del self.tasks[(task.jobid, task.taskid)]
-
-    def monitor_tasks(self):
-        while True:
-            time.sleep(TASK_MONITOR_INTERVAL)
-            self.reap_tasks()
+    def reap_task(self, task):
+        self.slots.put(True)
+        del self.tasks[(task.jobid, task.taskid)]
 
     def serve(self):
-        thread.start_new_thread(self.monitor_tasks, tuple())
         while True:
             token = self.slots.get()
             task_conf = serialize.loads(self.jobrunner.get_task())
@@ -128,14 +91,15 @@ class TaskRunner(Configurable):
 
             task_conf['namenode'] = self.namenode
             task_conf['jobrunner'] = self.jobrunner.get_name()
-            task_conf['__token__'] = token
 
             if is_mapper_task(task_conf):
                 task = MapTask(task_conf)
             else:
-                break
+                task_conf['tmpdir'] = self.tmpdir
                 task = ReduceTask(task_conf)
+            tracker = TaskTracker(task, self.reap_task)
 
             with self.__lock__:
-                self.tasks[(task.jobid, task.taskid)] = task
-                task.start()
+                self.tasks[(task.jobid, task.taskid)] = tracker
+                tracker.start_track()
+                tracker.start_task()
