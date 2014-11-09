@@ -3,23 +3,18 @@ import os
 import shutil
 import thread
 import threading
+import time
 import Pyro4
 from Queue import Queue
-from utils.rmi import *
-from utils.filenames import *
+from core.conf import *
 from core.configurable import Configurable
 from core.maptask import MapTask
 from core.reducetask import ReduceTask
-from core.conf import *
+from utils.rmi import *
+from utils.filenames import *
 from utils.conf_loader import load_config
+from utils.sync import synchronized_method
 import utils.serialize as serialize
-
-def _slot(method):
-    def wrapper(self, *args, **kwargs):
-        ret = method(self, *args, **kwargs)
-        self.slots.put(True)
-        return ret
-    return wrapper
 
 def is_mapper_task(task_conf):
     return task_conf.has_key('mapper')
@@ -33,18 +28,20 @@ class TaskRunner(Configurable):
 
         self.slots = Queue()
         for i in range(TASK_RUNNER_SLOTS):
-            self.slots.put(True)
+            self.slots.put(i)
 
-        self.ns = Pyro4.locateNS()
+        self.tasks = {}
+        self.__lock__ = threading.Lock()
 
-        if self.ns is None:
+        ns = Pyro4.locateNS()
+
+        if ns is None:
             logging.error('Cannot locate Pyro name server')
             return
 
-        self.namenode = retrieve_object(self.ns, self.namenode)
-        self.jobrunner = retrieve_object(self.ns, self.jobrunner)
+        self.namenode = retrieve_object(ns, self.namenode)
+        self.jobrunner = retrieve_object(ns, self.jobrunner)
 
-    @_slot
     def run_reducetask(self, task_conf):
         jobrunner = retrieve_object(self.ns, self.jobrunner)
         jobid = task_conf['jobid']
@@ -96,13 +93,42 @@ class TaskRunner(Configurable):
             logging.error('remove tmp dir for reduce task %d job %d \
                 failed: %s' % (jobid, taskid, sys.exc_info()[1]))
 
+    @synchronized_method('__lock__')
+    def kill_task(self, jobid, taskid):
+        task = self.tasks.get(jobid, taskid)
+        if task is None:
+            logging.warning('kill_task: jobid %d taskid %d does not exist' %
+                (jobid, taskid))
+            return
+        task.kill()
+        self.slots.put(task.__token__)
+        del self.tasks[(jobid, taskid)]
+
+    @synchronized_method('__lock__')
+    def reap_tasks(self):
+        for task in self.tasks.values():
+            if not task.alive():
+                logging.debug('reaped task with jobid %d taskid %d' %
+                    (task.jobid, task.taskid))
+                self.slots.put(task.__token__)
+                del self.tasks[(task.jobid, task.taskid)]
+
+    def monitor_tasks(self):
+        while True:
+            time.sleep(TASK_MONITOR_INTERVAL)
+            self.reap_tasks()
+
     def serve(self):
-        while self.slots.get():
+        thread.start_new_thread(self.monitor_tasks, tuple())
+        while True:
+            token = self.slots.get()
             task_conf = serialize.loads(self.jobrunner.get_task())
-            logging.info('Got task with config %s' % str(task_conf))
+            logging.info('Got task with config %s, run on slot %d' %
+                (str(task_conf), token))
 
             task_conf['namenode'] = self.namenode
             task_conf['jobrunner'] = self.jobrunner.get_name()
+            task_conf['__token__'] = token
 
             if is_mapper_task(task_conf):
                 task = MapTask(task_conf)
@@ -110,4 +136,6 @@ class TaskRunner(Configurable):
                 break
                 task = ReduceTask(task_conf)
 
-            task.start()
+            with self.__lock__:
+                self.tasks[(task.jobid, task.taskid)] = task
+                task.start()

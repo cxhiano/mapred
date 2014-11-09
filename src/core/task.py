@@ -15,3 +15,6 @@ class Task(Configurable):
 
     def kill(self):
         self.process.terminate()
+
+    def alive(self):
+        return self.process.is_alive()
