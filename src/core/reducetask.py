@@ -3,8 +3,7 @@ import sys
 import logging
 import shutil
 from core.task import Task
-from mrio.record_file import RecordFile
-from mrio.record_reader import record_iter
+from mrio.record_file import RecordFile, record_iter
 from mrio.collector import OutputCollector
 from utils.sortfiles import sort_files
 from utils.filenames import *
