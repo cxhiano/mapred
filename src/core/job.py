@@ -21,6 +21,11 @@ class Job(Configurable):
         self.result_files = []
         self.terminate_flag = False
 
+        self.finished_mappers = 0
+        self.failed_mappers = 0
+        self.finished_reducers = 0
+        self.failed_reducers = 0
+
     def terminate(self):
         self.terminate_flag = True
         self.list.report_failed(0)
@@ -176,9 +181,17 @@ class Job(Configurable):
                 self.open_files.append(fname)
 
     def report_task_fail(self, taskid):
+        if self.phase == MAP_PHASE:
+            self.failed_mappers += 1
+        else:
+            self.failed_reducers += 1
         self.list.report_failed(taskid)
 
     def report_task_succeed(self, taskid):
+        if self.phase == MAP_PHASE:
+            self.finished_mappers += 1
+        else:
+            self.finished_reducers += 1
         self.list.report_succeeded(taskid)
 
     def cleanup(self):

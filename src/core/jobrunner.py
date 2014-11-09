@@ -134,7 +134,13 @@ class JobRunner(Configurable):
                 del self.running_tasks[(jid, taskid)]
 
     def job_detail(self, job):
-        return job.id
+        string = ('job %d:\n'
+                  'map task: total %d, finished %d, failed %d\n'
+                  'reduce task: total %d, finished %d, failed %d\n')
+
+        return string % (job.id,
+            job.cnt_mappers, job.finished_mappers, job.failed_mappers,
+            job.cnt_reducers, job.finished_reducers, job.failed_reducers)
 
     @synchronized_method('__lock__')
     def list_jobs(self):
