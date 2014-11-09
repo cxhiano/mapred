@@ -59,8 +59,7 @@ class TaskRunner(Configurable):
         while True:
             token = self.slots.get()
             task_conf = serialize.loads(self.jobrunner.get_task(self.name))
-            logging.info('Got task with config %s, run on slot %d' %
-                (str(task_conf), token))
+            logging.info('Got task with config %s' % str(task_conf))
 
             task_conf['namenode'] = self.namenode
             task_conf['jobrunner'] = self.jobrunner.get_name()

@@ -3,12 +3,13 @@ import thread
 import threading
 import Pyro4
 from Queue import Queue
-from core.job import Job
 from core.conf import *
+from core.job import Job
 from core.configurable import *
 from utils.conf_loader import load_config
 from utils.rmi import *
 from utils.sync import synchronized_method
+from utils.cmd import *
 import utils.serialize as serialize
 
 class JobRunner(Configurable):
@@ -30,12 +31,14 @@ class JobRunner(Configurable):
         task_conf = self.task_queue.get()
         jobid, taskid = task_conf['jobid'], task_conf['taskid']
         with self.__lock__:
-            self.running_tasks[(jobid, taskid)] = task_runner
             if not task_runner in self.task_runners:
                 logging.info('receive get task request from new task runner %s'
                     % task_runner)
                 self.task_runners[task_runner] = retrieve_object(self.ns,
                     task_runner)
+
+            task_runner = self.task_runners[task_runner]
+            self.running_tasks[(jobid, taskid)] = task_runner
         return serialize.dumps(task_conf)
 
     def add_task(self, task_conf):
@@ -63,7 +66,7 @@ class JobRunner(Configurable):
     def report_task_fail(self, jobid, taskid):
         job = self.jobs.get(jobid)
         if not (jobid, taskid) in self.running_tasks:
-            logging.error('Receive task fail report with unknown jobid %d \
+            logging.info('Receive task fail report with unknown jobid %d \
                 taskid %d' % (jobid, taskid))
             return
 
@@ -76,8 +79,8 @@ class JobRunner(Configurable):
     def report_task_succeed(self, jobid, taskid):
         job = self.jobs.get(jobid)
         if not (jobid, taskid) in self.running_tasks:
-            logging.error('Receive task succeed report with unknown jobid %d \
-                taskid %d' % (jobid, taskid))
+            logging.info('Receive task succeed report with unknown jobid %d' \
+                % jobid)
             return
 
         logging.info('job %d, task %d succeded' % (jobid, taskid))
@@ -116,6 +119,34 @@ class JobRunner(Configurable):
         thread.start_new_thread(job.run, tuple())
         return job.id
 
+    @synchronized_method('__lock__')
+    def kill_job(self, jobid):
+        jobid = int(jobid)
+        job = self.jobs.get(jobid)
+        if job is None:
+            logging.error('kill_job: job %d does not exist' % jobid)
+            return
+        job.terminate()
+        for jid, taskid in self.running_tasks.keys():
+            if jid == jobid:
+                task_runner = self.running_tasks[(jid, taskid)]
+                task_runner.kill_task(jid, taskid)
+                del self.running_tasks[(jid, taskid)]
+
+    def job_detail(self, job):
+        return job.id
+
+    @synchronized_method('__lock__')
+    def list_jobs(self):
+        ret = []
+        for job in self.jobs.values():
+            ret.append(self.job_detail(job))
+        return ret
+
+    @synchronized_method('__lock__')
+    def list_task_runners(self):
+        return self.task_runners.keys()
+
     def run(self):
         self.ns = Pyro4.locateNS()
 
@@ -135,5 +166,20 @@ if __name__ == '__main__':
     jobrunner.run()
 
     cmd = CommandLine()
+
+    cmd.register(
+        'kill',
+        jobrunner.kill_job,
+        'kill job identified by given jobid')
+
+    cmd.register(
+        'jobs',
+        print_list(jobrunner.list_jobs),
+        'list running jobs')
+
+    cmd.register(
+        'taskrunners',
+        print_list(jobrunner.list_task_runners),
+        'list active task runners')
 
     cmd.run()

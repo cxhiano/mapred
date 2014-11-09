@@ -19,6 +19,11 @@ class Job(Configurable):
         self.id = jobid
         self.open_files = []
         self.result_files = []
+        self.terminate_flag = False
+
+    def terminate(self):
+        self.terminate_flag = True
+        self.list.report_failed(0)
 
     def validate(self, jobconf):
         cnt_reducers = jobconf.get('cnt_reducers')
@@ -71,8 +76,9 @@ class Job(Configurable):
         self.list = TaskList(self.cnt_mappers)
 
         for taskid in self.list:
-            if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE:
-                logging.info('job %d: %d tasks failed' % (self.id,
+            if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE or \
+                    self.terminate_flag:
+                logging.info('job %d terminated: %d tasks failed' % (self.id,
                     self.list.fails))
                 self.fail()
                 return
@@ -84,8 +90,9 @@ class Job(Configurable):
         self.list = TaskList(self.cnt_reducers)
 
         for taskid in self.list:
-            if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE:
-                logging.info('job %d: %d tasks failed' % (self.id,
+            if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE or \
+                    self.terminate_flag:
+                logging.info('job %d terminated: %d tasks failed' % (self.id,
                     self.list.fails))
                 self.fail()
                 return
