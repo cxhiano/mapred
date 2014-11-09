@@ -4,7 +4,7 @@
 
     <host>localhost</host>
 
-    <port>53421</port>
+    <port>54921</port>
 
     <datadir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/data/</datadir>
 
@@ -12,7 +12,7 @@
 
     <pyroNS>
         <host>localhost</host>
-        <port>8888</port>
+        <port>9999</port>
     </pyroNS>
 
 </datanode>

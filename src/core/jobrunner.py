@@ -1,3 +1,4 @@
+import time
 import thread
 import threading
 import Pyro4
@@ -49,9 +50,14 @@ class JobRunner(Configurable):
             except Exception as e:
                 logging.info('%s does not response: %s', name, e.message)
                 del self.task_runners[name]
-                for jobid, taskid in self.running_tasks:
+                for jobid, taskid in self.running_tasks.keys():
                     if self.running_tasks[(jobid, taskid)] == name:
-                        self.report_task_failed(jobid, taskid)
+                        self.report_task_fail(jobid, taskid)
+
+    def healthcheck(self):
+        while True:
+            time.sleep(HEARTBEAT_INTERVAL)
+            self.check_task_runners()
 
     @synchronized_method('__lock__')
     def report_task_fail(self, jobid, taskid):
@@ -61,6 +67,7 @@ class JobRunner(Configurable):
                 taskid %d' % (jobid, taskid))
             return
 
+        logging.info('job %d, task %d failed' % (jobid, taskid))
         del self.running_tasks[(jobid, taskid)]
 
         job.report_task_fail(taskid)
@@ -73,6 +80,7 @@ class JobRunner(Configurable):
                 taskid %d' % (jobid, taskid))
             return
 
+        logging.info('job %d, task %d succeded' % (jobid, taskid))
         del self.running_tasks[(jobid, taskid)]
 
         job.report_task_succeed(taskid)
@@ -118,4 +126,5 @@ class JobRunner(Configurable):
         self.namenode = retrieve_object(self.ns, self.namenode)
 
         daemon = export(self)
+        thread.start_new_thread(self.healthcheck, tuple())
         daemon.requestLoop()

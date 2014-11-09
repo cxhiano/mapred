@@ -8,6 +8,6 @@
 
     <pyroNS>
         <host>localhost</host>
-        <port>8888</port>
+        <port>9999</port>
     </pyroNS>
 </namenode>

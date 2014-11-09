@@ -2,13 +2,13 @@ import re
 
 def map(key, value, out):
     import random
+    import time
 
     for word in value.split():
         if len(word) > 0:
             out.put(word, 1)
 
-    while True:
-        pass
+    time.sleep(2)
 
 def reduce(key, values, out):
     import random

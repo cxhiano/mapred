@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jobrunner>
-    <name>TaskRunner1</name>
+    <name>TaskRunner2</name>
 
     <jobrunner>JobRunner</jobrunner>
 
@@ -8,12 +8,12 @@
 
     <host>localhost</host>
 
-    <port>11111</port>
+    <port>11231</port>
 
     <tmpdir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/tmp</tmpdir>
 
     <pyroNS>
         <host>localhost</host>
-        <port>8888</port>
+        <port>9999</port>
     </pyroNS>
 </jobrunner>

@@ -7,7 +7,7 @@ from utils.rmi import *
 import utils.serialize as serialize
 import example.wordcount as wordcount
 
-ns = Pyro4.locateNS(port=8888)
+ns = Pyro4.locateNS(port=9999)
 namenode = retrieve_object(ns, 'NameNode')
 
 def create_input(fname, namenode):
@@ -26,10 +26,12 @@ def create_input(fname, namenode):
     datanode.close_file(fname)
 
 if __name__ == '__main__':
+    '''
     create_input('a.txt', namenode)
     create_input('b.txt', namenode)
     create_input('c.txt', namenode)
     create_input('d.txt', namenode)
+    '''
 
     Pyro4.config.SERIALIZER = 'marshal'
     jobconf1 = {
@@ -37,7 +39,7 @@ if __name__ == '__main__':
         'reducer': wordcount.reduce,
         'cnt_reducers': 2,
         'inputs': ['a.txt', 'b.txt'],
-        'output_dir': 'mytask5'
+        'output_dir': 'mytask0'
     }
 
     jobconf2 = {
@@ -45,7 +47,7 @@ if __name__ == '__main__':
         'reducer': wordcount.reduce,
         'cnt_reducers': 1,
         'inputs': ['a.txt', 'b.txt'],
-        'output_dir': 'mytask6'
+        'output_dir': 'mytask1'
     }
 
     jr = retrieve_object(ns, 'JobRunner')
