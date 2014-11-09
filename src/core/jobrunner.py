@@ -66,8 +66,8 @@ class JobRunner(Configurable):
     def report_task_fail(self, jobid, taskid):
         job = self.jobs.get(jobid)
         if not (jobid, taskid) in self.running_tasks:
-            logging.info('Receive task fail report with unknown jobid %d \
-                taskid %d' % (jobid, taskid))
+            logging.info(('Receive task fail report with unknown jobid %d '
+                'taskid %d') % (jobid, taskid))
             return
 
         logging.info('job %d, task %d failed' % (jobid, taskid))
