@@ -1,3 +1,4 @@
+import thread
 import threading
 import Pyro4
 from multiprocessing import Queue
@@ -19,8 +20,6 @@ class TaskRunner(Configurable):
         super(TaskRunner, self).__init__(load_config(conf))
         self.config_pyroNS()
 
-        Pyro4.config.SERIALIZER = "marshal"
-
         self.slots = Queue()
         for i in range(TASK_RUNNER_SLOTS):
             self.slots.put(True)
@@ -28,14 +27,14 @@ class TaskRunner(Configurable):
         self.tasks = {}
         self.__lock__ = threading.Lock()
 
-        ns = Pyro4.locateNS()
+        self.ns = Pyro4.locateNS()
 
-        if ns is None:
+        if self.ns is None:
             logging.error('Cannot locate Pyro name server')
             return
 
-        self.namenode = retrieve_object(ns, self.namenode)
-        self.jobrunner = retrieve_object(ns, self.jobrunner)
+        self.namenode = retrieve_object(self.ns, self.namenode)
+        self.jobrunner = retrieve_object(self.ns, self.jobrunner)
 
     @synchronized_method('__lock__')
     def kill_task(self, jobid, taskid):
@@ -47,11 +46,16 @@ class TaskRunner(Configurable):
         tracker.kill_task()
 
     @synchronized_method('__lock__')
-    def reap_task(self, task):
+    def reap_task(self, jobid, taskid):
         self.slots.put(True)
-        del self.tasks[(task.jobid, task.taskid)]
+        del self.tasks[(jobid, taskid)]
 
-    def serve(self):
+    def run(self):
+        daemon = export(self)
+        thread.start_new_thread(daemon.requestLoop, tuple())
+
+        Pyro4.config.SERIALIZER = 'marshal'
+
         while True:
             token = self.slots.get()
             task_conf = serialize.loads(self.jobrunner.get_task(self.name))
@@ -73,3 +77,6 @@ class TaskRunner(Configurable):
                 self.tasks[(task.jobid, task.taskid)] = tracker
                 tracker.start_track()
                 tracker.start_task()
+
+    def heartbeat(self):
+        return True

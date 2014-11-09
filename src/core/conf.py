@@ -1,7 +1,7 @@
 # The number of tasks a task runner can run concurrently
 TASK_RUNNER_SLOTS = 5
 # A task will timeout if it cannot finish within this amount of time
-TASK_TIMEOUT = 1
+TASK_TIMEOUT = 10000
 
 
 JOB_RUNNER_SLOTS = 1

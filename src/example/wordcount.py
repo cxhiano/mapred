@@ -7,10 +7,8 @@ def map(key, value, out):
         if len(word) > 0:
             out.put(word, 1)
 
-    if random.randint(0, 100) == 0:
-        print 'random failed'
-        while True:
-            pass
+    while True:
+        pass
 
 def reduce(key, values, out):
     import random

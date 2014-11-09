@@ -27,15 +27,14 @@ class JobRunner(Configurable):
 
     def get_task(self, task_runner):
         task_conf = self.task_queue.get()
-        '''
         jobid, taskid = task_conf['jobid'], task_conf['taskid']
-        self.running_tasks[(jobid, taskid)] = task_runner
-        if not task_runner in self.task_runners:
-            logging.info('receive get task request from new task runner %s'
-                % task_runner)
-            self.task_runners[task_runner] = retrieve_object(self.ns,
-                task_runner)
-        '''
+        with self.__lock__:
+            self.running_tasks[(jobid, taskid)] = task_runner
+            if not task_runner in self.task_runners:
+                logging.info('receive get task request from new task runner %s'
+                    % task_runner)
+                self.task_runners[task_runner] = retrieve_object(self.ns,
+                    task_runner)
         return serialize.dumps(task_conf)
 
     def add_task(self, task_conf):
@@ -47,8 +46,8 @@ class JobRunner(Configurable):
             task_runner = self.task_runners[name]
             try:
                 task_runner.heartbeat()
-            except:
-                logging.info('%s does not response', name)
+            except Exception as e:
+                logging.info('%s does not response: %s', name, e.message)
                 del self.task_runners[name]
                 for jobid, taskid in self.running_tasks:
                     if self.running_tasks[(jobid, taskid)] == name:
@@ -57,19 +56,25 @@ class JobRunner(Configurable):
     @synchronized_method('__lock__')
     def report_task_fail(self, jobid, taskid):
         job = self.jobs.get(jobid)
-        if job is None:
-            logging.error('Receive task fail report with unknown jobid %d'
-                % jobid)
+        if not (jobid, taskid) in self.running_tasks:
+            logging.error('Receive task fail report with unknown jobid %d \
+                taskid %d' % (jobid, taskid))
             return
+
+        del self.running_tasks[(jobid, taskid)]
+
         job.report_task_fail(taskid)
 
     @synchronized_method('__lock__')
     def report_task_succeed(self, jobid, taskid):
         job = self.jobs.get(jobid)
-        if job is None:
-            logging.error('Receive task succeed report with unknown \
-                jobid %d' % jobid)
+        if not (jobid, taskid) in self.running_tasks:
+            logging.error('Receive task succeed report with unknown jobid %d \
+                taskid %d' % (jobid, taskid))
             return
+
+        del self.running_tasks[(jobid, taskid)]
+
         job.report_task_succeed(taskid)
 
     @synchronized_method('__lock__')

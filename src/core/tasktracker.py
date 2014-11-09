@@ -40,7 +40,7 @@ class TaskTracker(object):
             self.runner.terminate()
             code = TIMEOUT
 
-        self.callback(self.task)
+        self.callback(self.task.jobid, self.task.taskid)
 
         if code == COMPLETE:
             logging.info('%s exits normally' % self.task.name)
