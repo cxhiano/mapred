@@ -41,10 +41,12 @@ def test_map():
     task.run()
 
 if __name__ == '__main__':
+    '''
     create_input('a.txt', namenode)
     create_input('b.txt', namenode)
     create_input('c.txt', namenode)
     create_input('d.txt', namenode)
+    '''
 
     Pyro4.config.SERIALIZER = 'marshal'
     jobconf1 = {
@@ -52,7 +54,7 @@ if __name__ == '__main__':
         'reducer': wordcount.reduce,
         'cnt_reducers': 2,
         'inputs': ['a.txt', 'b.txt'],
-        'output_dir': 'mytask3'
+        'output_dir': 'mytask0'
     }
 
     jobconf2 = {
@@ -60,7 +62,7 @@ if __name__ == '__main__':
         'reducer': wordcount.reduce,
         'cnt_reducers': 1,
         'inputs': ['a.txt', 'b.txt'],
-        'output_dir': 'mytask2'
+        'output_dir': 'mytask1'
     }
 
     jr = retrieve_object(ns, 'JobRunner')

@@ -33,7 +33,8 @@ class JobRunner(Configurable):
     def report_mapper_fail(self, jobid, taskid):
         job = self.jobs.get(jobid)
         if job is None:
-            logging.error('Receive mapper fail report with unknown jobid')
+            logging.error('Receive mapper fail report with unknown jobid %d'
+                % jobid)
             return
         logging.info('map task %d for job %d failed' % (taskid, jobid))
         job.report_mapper_fail(taskid)

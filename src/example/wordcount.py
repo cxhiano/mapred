@@ -7,12 +7,10 @@ def map(key, value, out):
         if len(word) > 0:
             out.put(word, 1)
 
-    '''
     if random.randint(0, 100) == 0:
         print 'random failed'
         while True:
             pass
-    '''
 
 def reduce(key, values, out):
     import random
@@ -22,8 +20,6 @@ def reduce(key, values, out):
         cnt += int(v)
     out.put(key, cnt)
 
-    '''
     if random.randint(0, 100) == 0:
         print 'random failed'
         raise Exception('random failed!')
-    '''

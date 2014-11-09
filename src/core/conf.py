@@ -10,4 +10,4 @@ JOB_RUNNER_SLOTS = 1
 RECORDS_PER_BLOCK = 5
 
 # After this number of tasks failed, the job will be deemed as failed
-JOB_MAXIMUM_TASK_FAILURE = 3
+JOB_MAXIMUM_TASK_FAILURE = 20
