@@ -20,5 +20,5 @@ def reduce(key, values, out):
         cnt += int(v)
     out.put(key, cnt)
 
-    if random.randint(0, 10) == 0:
+    if random.randint(0, 50) == 0:
         raise Exception('random failed!')

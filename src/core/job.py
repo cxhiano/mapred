@@ -79,8 +79,12 @@ class Job(Configurable):
                 datanode = self.runner.namenode.create_file(fname)
             else:
                 datanode.create_file(fname)
+
+            bytes_written = 0
             for record in block:
-                datanode.write_file(fname, 0, record)
+                bytes_written += datanode.write_file(fname, bytes_written,
+                    record)
+
             datanode.close_file(fname)
             results.append(fname)
 

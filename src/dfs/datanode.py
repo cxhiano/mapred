@@ -95,6 +95,7 @@ class DataNode(Configurable):
     def write_file(self, file_, offset, buf):
         file_.seek(offset)
         file_.write(buf)
+        file_.flush()
         return len(buf)
 
     @synchronized_method('lock')

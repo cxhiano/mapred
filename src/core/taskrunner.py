@@ -1,9 +1,4 @@
-import sys
-import os
-import shutil
-import thread
 import threading
-import time
 import Pyro4
 from multiprocessing import Queue
 from core.conf import *
@@ -12,7 +7,6 @@ from core.maptask import MapTask
 from core.reducetask import ReduceTask
 from core.tasktracker import TaskTracker
 from utils.rmi import *
-from utils.filenames import *
 from utils.conf_loader import load_config
 from utils.sync import synchronized_method
 import utils.serialize as serialize
@@ -43,31 +37,6 @@ class TaskRunner(Configurable):
         self.namenode = retrieve_object(ns, self.namenode)
         self.jobrunner = retrieve_object(ns, self.jobrunner)
 
-    def run_reducetask(self, task_conf):
-
-        try:
-            reducetask.run()
-        except:
-            logging.info('reduce task %d for job %d failed: %s' % \
-                (taskid, jobid, sys.exc_info()[1]))
-
-            reducetask.cleanup()
-
-            jobrunner.report_reducer_fail(jobid, taskid)
-
-            return
-
-        logging.info('reduce task %d for job %d completed' % \
-            (taskid, jobid))
-
-        jobrunner.report_reducer_succeed(jobid, taskid)
-
-        try:
-            shutil.rmtree(tmpdir)
-        except OSError:
-            logging.error('remove tmp dir for reduce task %d job %d \
-                failed: %s' % (jobid, taskid, sys.exc_info()[1]))
-
     @synchronized_method('__lock__')
     def kill_task(self, jobid, taskid):
         tracker = self.tasks.get((jobid, taskid))
@@ -97,6 +66,7 @@ class TaskRunner(Configurable):
             else:
                 task_conf['tmpdir'] = self.tmpdir
                 task = ReduceTask(task_conf)
+
             tracker = TaskTracker(task, self.reap_task)
 
             with self.__lock__:

@@ -60,10 +60,10 @@ if __name__ == '__main__':
         'mapper': wordcount.map,
         'reducer': wordcount.reduce,
         'cnt_reducers': 1,
-        'inputs': ['c.txt', 'd.txt'],
+        'inputs': ['a.txt', 'b.txt'],
         'output_dir': 'mytask2'
     }
 
     jr = retrieve_object(ns, 'JobRunner')
     jr.submit_job(serialize.dumps(jobconf1))
-    # jr.submit_job(serialize.dumps(jobconf2))
+    jr.submit_job(serialize.dumps(jobconf2))
