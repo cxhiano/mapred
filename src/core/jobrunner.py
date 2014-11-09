@@ -72,7 +72,6 @@ class JobRunner(Configurable):
             logging.error('Receive job succeded report with unknown jobid %d' \
                 % jobid)
         logging.info('job %d completed' % jobid)
-        job.cleanup()
         del self.jobs[jobid]
 
     @synchronized_method('lock')
@@ -82,7 +81,6 @@ class JobRunner(Configurable):
             logging.error('Receive job fail report with unknown jobid %d' \
                 % jobid)
         logging.info('job %d failed' % jobid)
-        job.cleanup()
         del self.jobs[jobid]
 
     @synchronized_method('lock')

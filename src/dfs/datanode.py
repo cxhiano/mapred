@@ -33,7 +33,7 @@ class DataNode(Configurable):
         super(DataNode, self).__init__(load_config(conf))
         self.config_pyroNS()
         self.files = {}
-        self.lock = threading.RLock()
+        self.__lock__ = threading.RLock()
 
     def get_name(self):
         return self.name
@@ -54,7 +54,7 @@ class DataNode(Configurable):
     def real_filename(self, filename):
         return ''.join([self.datadir, filename])
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     def create_file(self, filename):
         real_fn = self.real_filename(filename)
         logging.debug('Creating file at %s' % real_fn)
@@ -65,7 +65,7 @@ class DataNode(Configurable):
 
         self.namenode.create_file_meta(filename, self)
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     def delete_file(self, filename):
         if not filename in self.files:
             logging.warning('%s does not exist' % filename)
@@ -78,19 +78,19 @@ class DataNode(Configurable):
         del self.files[filename]
         self.namenode.delete_file_meta(filename)
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     @openfile('r')
     def read_file(self, file_, offset, nbytes):
         file_.seek(offset)
         return file_.read(nbytes)
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     @openfile('r')
     def readline_file(self, file_, offset):
         file_.seek(offset)
         return file_.readline()
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     @openfile('w')
     def write_file(self, file_, offset, buf):
         file_.seek(offset)
@@ -98,12 +98,12 @@ class DataNode(Configurable):
         file_.flush()
         return len(buf)
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     @openfile('rw')
     def seek_file(self, file_, offset):
         file_.seek(offset)
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     @openfile('rw')
     def close_file(self, file_):
         file_.close()

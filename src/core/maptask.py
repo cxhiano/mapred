@@ -11,23 +11,14 @@ class MapTask(Task):
         self.name = 'map task %d for job %d' % (self.taskid, self.jobid)
         self.out_files = []
 
-    def create_output_files(self):
-        datanode = None
-        out_files = []
-
-        for i in range(self.cnt_reducers):
-            fname = map_output(self.jobid, self.taskid, i)
-            if datanode is None:
-                datanode = self.namenode.create_file(fname)
-            else:
-                datanode.create_file(fname)
-
-            out_files.append(RecordFile(fname, self.namenode))
-        return out_files
-
     def run(self):
         try:
-            out_files = self.create_output_files()
+            datanode = None
+            out_files = []
+
+            for i in range(self.cnt_reducers):
+                fname = map_output(self.jobid, self.taskid, i)
+                out_files.append(RecordFile(fname, self.namenode))
 
             input_ = RecordFile(self.input, self.namenode)
             out = OutputCollector(out_files, self.cnt_reducers)

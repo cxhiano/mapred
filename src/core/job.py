@@ -15,9 +15,11 @@ REDUCE_PHASE = 1
 class Job(Configurable):
     def __init__(self, jobid, jobconf, runner):
         super(Job, self).__init__(jobconf)
-        self.id = jobid
         self.runner = runner
+        self.id = jobid
         self.tasks = {}
+        self.open_files = []
+        self.result_files = []
 
     def validate(self, jobconf):
         cnt_reducers = jobconf.get('cnt_reducers')
@@ -27,8 +29,6 @@ class Job(Configurable):
         output_dir = jobconf.get('output_dir')
         if type(output_dir) != str:
             raise ValidationError('output_dir must be a string')
-            # TODO: Test whether output_dir exists
-            pass
 
         inputs = jobconf.get('inputs')
         if type(inputs) != list:
@@ -50,15 +50,31 @@ class Job(Configurable):
     def run(self):
         logging.info('start running job %d' % self.id)
 
-        blocks = self.split_input()
+        try:
+            blocks = self.split_input()
+        except Exception as e:
+            logging.info('job %d split input error: %s' % (self.id, e.message))
+            self.fail()
+            return
         self.cnt_mappers = len(blocks)
         logging.info('Splitting input file done: %d blocks' % self.cnt_mappers)
+
+        try:
+            self.create_output_files()
+        except Exception as e:
+            logging.info('job %d create output files error: %s' % (self.id,
+                e.message))
+            self.fail()
+            return
+        logging.info('job %d: create input files done' % self.id)
 
         self.phase = MAP_PHASE
         self.list = TaskList(self.cnt_mappers)
 
         for taskid in self.list:
             if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE:
+                logging.info('job %d: %d tasks failed' % (self.id,
+                    self.list.fails))
                 self.fail()
                 return
             task_conf = self.make_mapper_task_conf(taskid)
@@ -70,16 +86,21 @@ class Job(Configurable):
 
         for taskid in self.list:
             if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE:
+                logging.info('job %d: %d tasks failed' % (self.id,
+                    self.list.fails))
                 self.fail()
                 return
             task_conf = self.make_reducer_task_conf(taskid)
             self.runner.add_task(task_conf)
             logging.info('enqueued reduce task %d for job %d' % (taskid, self.id))
 
+        for fname in self.result_files:
+            self.open_files.remove(fname)
+        self.cleanup()
         self.runner.report_job_succeed(self.id)
 
     def fail(self):
-        logging.info('%d tasks failed' % self.list.fails)
+        self.cleanup()
         self.runner.report_job_fail(self.id)
 
     def make_mapper_task_conf(self, taskid):
@@ -125,11 +146,28 @@ class Job(Configurable):
 
             datanode.close_file(fname)
             results.append(fname)
+            self.open_files.append(fname)
 
         for file_ in input_files:
             file_.close()
 
         return results
+
+    def create_output_files(self):
+        datanode = None
+        for i in range(self.cnt_reducers):
+            fname = '%s.%s' % (self.output_dir, reduce_output(self.id, i))
+            if datanode is None:
+                datanode = self.runner.namenode.create_file(fname)
+            else:
+                datanode.create_file(fname)
+            self.result_files.append(fname)
+            self.open_files.append(fname)
+
+            for j in range(self.cnt_mappers):
+                fname = map_output(self.id, j, i)
+                datanode.create_file(fname)
+                self.open_files.append(fname)
 
     def report_mapper_fail(self, taskid):
         self.list.report_failed(taskid)
@@ -145,18 +183,8 @@ class Job(Configurable):
 
     def cleanup(self):
         namenode = self.runner.namenode
-        for i in range(self.cnt_mappers):
-            fname = map_input(self.id, i)
-
+        for fname in self.open_files:
             try:
                 namenode.delete_file(fname)
             except IOError:
                 logging.warning('Error deleting file %s' % fname)
-
-            for j in range(self.cnt_reducers):
-                fname = map_output(self.id, i, j)
-
-                try:
-                    namenode.delete_file(fname)
-                except IOError:
-                    logging.warning('Error deleting file %s' % fname)

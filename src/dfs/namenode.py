@@ -20,7 +20,7 @@ class NameNode(Configurable):
 
         self.datanodes = {}
         self.files = {}
-        self.lock = threading.RLock()
+        self.__lock__ = threading.RLock()
 
     def report(self, datanode):
         self.datanodes[datanode] = retrieve_object(self.ns, datanode)
@@ -38,20 +38,20 @@ class NameNode(Configurable):
         daemon = export(self)
         daemon.requestLoop()
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     def create_file_meta(self, filename, datanode):
         if filename in self.files:
             raise IOError('File already exists!')
         self.files[filename] = datanode
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     def delete_file_meta(self, filename):
         if not filename in self.files:
             raise IOError('File not found!')
         del self.files[filename]
 
     def create_file(self, filename, preference=None):
-        with self.lock:
+        with self.__lock__:
             if filename in self.files:
                 raise IOError('File %s already exists!' % filename)
 
@@ -72,14 +72,14 @@ class NameNode(Configurable):
         return datanode
 
     def delete_file(self, filename):
-        with self.lock:
+        with self.__lock__:
             if not filename in self.files:
                 logging.warning('%s does not exist' % filename)
                 return
 
         self.files[filename].delete_file(filename)
 
-    @synchronized_method('lock')
+    @synchronized_method('__lock__')
     def get_file(self, filename):
         if not filename in self.files:
             raise IOError('File Not Found')

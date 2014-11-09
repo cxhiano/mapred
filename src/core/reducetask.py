@@ -18,22 +18,12 @@ class ReduceTask(Task):
         self.output_fname = '%s.%s' % (self.output_dir, reduce_output(self.jobid,
             self.taskid))
 
-    def setup(self):
+    def run(self):
         try:
             os.mkdir(self.tmpdir)
         except OSError:
             logging.info('%s cannot create dir %s: %s' % (self.name, self.tmpdir,
                 sys.exc_info()[1]))
-
-        self.namenode.create_file(self.output_fname)
-
-    def run(self):
-        try:
-            self.setup()
-        except:
-            logging.info('%s error when setting up: %s' % (self.name,
-                sys.exc_info()[1]))
-            return False
 
         try:
             inputs = [RecordFile(fname, self.namenode) for fname in \
@@ -79,13 +69,6 @@ class ReduceTask(Task):
         self.jobrunner.report_reducer_fail(self.jobid, self.taskid)
 
     def cleanup(self):
-        try:
-            logging.debug('%s: trying to delete %s' % (self.name, self.output_fname))
-            self.namenode.delete_file(self.output_fname)
-        except:
-            logging.warning('%s: Error deleting file %s in cleanup: %s' %
-                (self.name, self.output_fname, sys.exc_info()[1]))
-
         try:
             shutil.rmtree(self.tmpdir)
         except OSError:
