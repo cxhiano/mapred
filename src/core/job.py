@@ -14,7 +14,7 @@ REDUCE_PHASE = 1
 
 class Job(Configurable):
     def __init__(self, jobid, jobconf, runner):
-        self.load_dict(jobconf)
+        super(Job, self).__init__(jobconf)
         self.id = jobid
         self.runner = runner
 
@@ -76,7 +76,7 @@ class Job(Configurable):
             taskid += 1
             datanode = self.runner.namenode.create_file(fname)
             for record in block:
-                datanode.write_file(fname, record)
+                datanode.write_file(fname, 0, record)
             datanode.close_file(fname)
             results.append(fname)
 

@@ -26,8 +26,11 @@ def is_mapper_task(task_conf):
 
 class TaskRunner(Configurable):
     def __init__(self, conf):
-        self.load_dict(load_config(conf))
+        super(TaskRunner, self).__init__(load_config(conf))
+        self.config_pyroNS()
+
         Pyro4.config.SERIALIZER = "marshal"
+
         self.slots = Queue()
         for i in range(TASK_RUNNER_SLOTS):
             self.slots.put(True)
@@ -109,7 +112,7 @@ class TaskRunner(Configurable):
                 failed: %s' % (jobid, taskid, sys.exc_info()[1]))
 
     def serve(self):
-        self.ns = locateNS(self.pyroNS['host'], int(self.pyroNS['port']))
+        self.ns = Pyro4.locateNS()
 
         if self.ns is None:
             logging.error('Cannot locate Pyro name server')

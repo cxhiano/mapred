@@ -23,7 +23,7 @@ def create_input(fname, namenode):
               '''
 
     datanode = namenode.create_file(fname)
-    datanode.write_file(fname, content)
+    datanode.write_file(fname, 0, content)
     datanode.close_file(fname)
 
 def test_map():

@@ -1,14 +1,14 @@
 import os
-from core.configurable import Configurable
+from core.task import Task
 from mrio.record_file import RecordFile
 from mrio.record_reader import record_iter
 from mrio.collector import OutputCollector
 from utils.sortfiles import sort_files
 from utils.filenames import *
 
-class ReduceTask(Configurable):
+class ReduceTask(Task):
     def __init__(self, task_conf, runner):
-        self.load_dict(task_conf)
+        super(ReduceTask, self).__init__(task_conf)
         self.runner = runner
 
     def run(self):

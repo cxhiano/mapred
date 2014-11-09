@@ -7,7 +7,7 @@ def map(key, value, out):
         if len(word) > 0:
             out.put(word, 1)
 
-    if random.randint(0, 1) == 0:
+    if random.randint(0, 5) == 0:
         raise Exception('random failed!')
 
 def reduce(key, values, out):
@@ -18,5 +18,5 @@ def reduce(key, values, out):
         cnt += int(v)
     out.put(key, cnt)
 
-    if random.randint(0, 5) == 0:
+    if random.randint(0, 10) == 0:
         raise Exception('random failed!')

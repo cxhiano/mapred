@@ -1,8 +1,10 @@
 import thread
 import threading
+import Pyro4
 from Queue import Queue
 from core.job import Job
 from core.configurable import Configurable
+from core.conf import *
 from utils.conf_loader import load_config
 from utils.rmi import *
 from utils.sync import synchronized_method
@@ -10,8 +12,10 @@ import utils.serialize as serialize
 
 class JobRunner(Configurable):
     def __init__(self, conf):
-        self.load_dict(load_config(conf))
-        self.tasks = Queue(1)
+        super(JobRunner, self).__init__(load_config(conf))
+        self.config_pyroNS()
+
+        self.tasks = Queue(JOB_RUNNER_SLOTS)
         self.jobid = 1
         self.jobs = {}
         self.lock = threading.Lock()
@@ -76,7 +80,7 @@ class JobRunner(Configurable):
         return job.id
 
     def serve(self):
-        self.ns = locateNS(self.pyroNS['host'], int(self.pyroNS['port']))
+        self.ns = Pyro4.locateNS()
 
         if self.ns is None:
             logging.error('Cannot locate Pyro name server')

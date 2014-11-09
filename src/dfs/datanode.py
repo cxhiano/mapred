@@ -29,8 +29,9 @@ def openfile(mode):
 class DataNode(Configurable):
     """ A data node in distributed file system """
 
-    def __init__(self, conf_file):
-        self.load_dict(load_config(conf_file))
+    def __init__(self, conf):
+        super(DataNode, self).__init__(load_config(conf))
+        self.config_pyroNS()
         self.files = {}
         self.lock = threading.RLock()
 
@@ -38,7 +39,7 @@ class DataNode(Configurable):
         return self.name
 
     def run(self):
-        self.ns = locateNS(self.pyroNS['host'], int(self.pyroNS['port']))
+        self.ns = Pyro4.locateNS()
 
         if self.ns is None:
             logging.error('Cannot locate Pyro name server')
@@ -79,17 +80,20 @@ class DataNode(Configurable):
 
     @synchronized_method('lock')
     @openfile('r')
-    def read_file(self, file_, nbytes):
+    def read_file(self, file_, offset, nbytes):
+        file_.seek(offset)
         return file_.read(nbytes)
 
     @synchronized_method('lock')
     @openfile('r')
-    def readline_file(self, file_):
+    def readline_file(self, file_, offset):
+        file_.seek(offset)
         return file_.readline()
 
     @synchronized_method('lock')
     @openfile('w')
-    def write_file(self, file_, buf):
+    def write_file(self, file_, offset, buf):
+        file_.seek(offset)
         file_.write(buf)
         return len(buf)
 

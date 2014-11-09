@@ -15,13 +15,12 @@ class NameNode(Configurable):
     """ The name node of distributed file system """
 
     def __init__(self, conf):
-        self.load_dict(load_config(conf))
+        super(NameNode, self).__init__(load_config(conf))
+        self.config_pyroNS()
+
         self.datanodes = {}
         self.files = {}
         self.lock = threading.RLock()
-
-    def run_pyro_naming_server(self):
-        Pyro4.naming.startNSloop(self.pyroNS['host'], int(self.pyroNS['port']))
 
     def report(self, datanode):
         self.datanodes[datanode] = retrieve_object(self.ns, datanode)
@@ -29,9 +28,9 @@ class NameNode(Configurable):
         return True
 
     def run(self):
-        thread.start_new_thread(self.run_pyro_naming_server, tuple())
+        thread.start_new_thread(Pyro4.naming.startNSloop, tuple())
 
-        self.ns = locateNS(self.pyroNS['host'], int(self.pyroNS['port']))
+        self.ns = Pyro4.locateNS()
         if self.ns == None:
             logging.error('Cannot locate Pyro NS.')
             return

@@ -1,13 +1,13 @@
 import sys
 import logging
-from core.configurable import Configurable
+from core.task import Task
 from mrio.collector import OutputCollector
 from mrio.record_file import RecordFile
 from utils.filenames import *
 
-class MapTask(Configurable):
+class MapTask(Task):
     def __init__(self, task_conf, runner):
-        self.load_dict(task_conf)
+        super(MapTask, self).__init__(task_conf)
         self.out_files = []
         self.runner = runner
 
