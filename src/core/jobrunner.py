@@ -116,7 +116,7 @@ class JobRunner(Configurable):
         thread.start_new_thread(job.run, tuple())
         return job.id
 
-    def serve(self):
+    def run(self):
         self.ns = Pyro4.locateNS()
 
         if self.ns is None:
@@ -127,4 +127,13 @@ class JobRunner(Configurable):
 
         daemon = export(self)
         thread.start_new_thread(self.healthcheck, tuple())
-        daemon.requestLoop()
+        thread.start_new_thread(daemon.requestLoop, tuple())
+        logging.info('%s started', self.name)
+
+if __name__ == '__main__':
+    jobrunner = JobRunner(sys.argv[1])
+    jobrunner.run()
+
+    cmd = CommandLine()
+
+    cmd.run()

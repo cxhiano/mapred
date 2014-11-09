@@ -1,11 +1,14 @@
 import os
-import logging
+import sys
+import thread
 import threading
 import Pyro4
+from dfs.conf import *
 from core.configurable import Configurable
 from utils.conf_loader import load_config
 from utils.sync import synchronized_method
 from utils.rmi import *
+from utils.cmd import *
 
 def openfile(mode):
     def actual_decorator(func):
@@ -49,7 +52,8 @@ class DataNode(Configurable):
 
         daemon = export(self)
         self.namenode.report(self.name)
-        daemon.requestLoop()
+        thread.start_new_thread(daemon.requestLoop, tuple())
+        logging.info('%s started' % self.name)
 
     def real_filename(self, filename):
         return ''.join([self.datadir, filename])
@@ -108,5 +112,26 @@ class DataNode(Configurable):
     def close_file(self, file_):
         file_.close()
 
+    @synchronized_method('__lock__')
+    def list_files(self):
+        return self.files.keys()
+
     def heart_beat(self):
         return True
+
+if __name__ == '__main__':
+    node = DataNode(sys.argv[1])
+    node.run()
+    cmd = CommandLine()
+
+    cmd.register(
+        'files',
+        print_list(node.list_files),
+        'get a list of all files')
+
+    cmd.register(
+        'delete',
+        node.delete_file,
+        'delete specified file')
+
+    cmd.run()

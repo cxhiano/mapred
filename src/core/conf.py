@@ -1,3 +1,7 @@
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 # The number of tasks a task runner can run concurrently
 TASK_RUNNER_SLOTS = 5
 # A task will timeout if it cannot finish within this amount of time
