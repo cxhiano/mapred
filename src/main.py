@@ -66,4 +66,4 @@ if __name__ == '__main__':
 
     jr = retrieve_object(ns, 'JobRunner')
     jr.submit_job(serialize.dumps(jobconf1))
-    jr.submit_job(serialize.dumps(jobconf2))
+    # jr.submit_job(serialize.dumps(jobconf2))

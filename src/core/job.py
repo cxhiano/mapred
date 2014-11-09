@@ -71,10 +71,14 @@ class Job(Configurable):
             input_files.append(RecordFile(fname, self.runner.namenode))
 
         taskid = 0
+        datanode = None
         for block in splitter.split(input_files):
             fname = map_input(self.id, taskid)
             taskid += 1
-            datanode = self.runner.namenode.create_file(fname)
+            if datanode is None:
+                datanode = self.runner.namenode.create_file(fname)
+            else:
+                datanode.create_file(fname)
             for record in block:
                 datanode.write_file(fname, 0, record)
             datanode.close_file(fname)

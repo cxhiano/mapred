@@ -35,29 +35,14 @@ class TaskRunner(Configurable):
         for i in range(TASK_RUNNER_SLOTS):
             self.slots.put(True)
 
-    @_slot
-    def run_maptask(self, task_conf):
-        jobrunner = retrieve_object(self.ns, self.jobrunner)
-        jobid = task_conf['jobid']
-        taskid = task_conf['taskid']
-        maptask = MapTask(task_conf, self)
+        self.ns = Pyro4.locateNS()
 
-        try:
-            maptask.run()
-        except:
-            logging.info('map task %d for job %d failed: %s' % \
-                (taskid, jobid, sys.exc_info()[1]))
-
-            maptask.cleanup()
-
-            jobrunner.report_mapper_fail(jobid, taskid)
-
+        if self.ns is None:
+            logging.error('Cannot locate Pyro name server')
             return
 
-        logging.info('map task %d for job %d completed' % \
-            (taskid, jobid))
-
-        jobrunner.report_mapper_succeed(jobid, taskid)
+        self.namenode = retrieve_object(self.ns, self.namenode)
+        self.jobrunner = retrieve_object(self.ns, self.jobrunner)
 
     @_slot
     def run_reducetask(self, task_conf):
@@ -112,20 +97,17 @@ class TaskRunner(Configurable):
                 failed: %s' % (jobid, taskid, sys.exc_info()[1]))
 
     def serve(self):
-        self.ns = Pyro4.locateNS()
-
-        if self.ns is None:
-            logging.error('Cannot locate Pyro name server')
-            return
-
-        self.namenode = retrieve_object(self.ns, self.namenode)
-        jobrunner = retrieve_object(self.ns, self.jobrunner)
-
         while self.slots.get():
-            task_conf = serialize.loads(jobrunner.get_task())
+            task_conf = serialize.loads(self.jobrunner.get_task())
             logging.info('Got task with config %s' % str(task_conf))
 
+            task_conf['namenode'] = self.namenode
+            task_conf['jobrunner'] = self.jobrunner.get_name()
+
             if is_mapper_task(task_conf):
-                thread.start_new_thread(self.run_maptask, tuple([task_conf]))
+                task = MapTask(task_conf)
             else:
-                thread.start_new_thread(self.run_reducetask, tuple([task_conf]))
+                break
+                task = ReduceTask(task_conf)
+
+            task.start()

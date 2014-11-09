@@ -7,9 +7,8 @@ from utils.sortfiles import sort_files
 from utils.filenames import *
 
 class ReduceTask(Task):
-    def __init__(self, task_conf, runner):
+    def __init__(self, task_conf):
         super(ReduceTask, self).__init__(task_conf)
-        self.runner = runner
 
     def run(self):
         inputs = [RecordFile(fname, self.runner.namenode) for fname in \

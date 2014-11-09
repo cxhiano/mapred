@@ -20,6 +20,9 @@ class JobRunner(Configurable):
         self.jobs = {}
         self.lock = threading.Lock()
 
+    def get_name(self):
+        return self.name
+
     def get_task(self):
         task_conf = self.tasks.get()
         return serialize.dumps(task_conf)
