@@ -41,7 +41,7 @@ class DataNode(Configurable):
     def get_name(self):
         return self.name
 
-    def run(self):
+    def start(self):
         self.ns = Pyro4.locateNS()
 
         if self.ns is None:
@@ -121,7 +121,7 @@ class DataNode(Configurable):
 
 if __name__ == '__main__':
     node = DataNode(sys.argv[1])
-    node.run()
+    node.start()
     cmd = CommandLine()
 
     cmd.register(

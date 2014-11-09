@@ -27,7 +27,7 @@ class NameNode(Configurable):
         logging.info('receive report from %s' % datanode)
         return True
 
-    def run(self):
+    def start(self):
         thread.start_new_thread(Pyro4.naming.startNSloop, tuple())
 
         self.ns = Pyro4.locateNS()
@@ -105,7 +105,7 @@ class NameNode(Configurable):
 
 if __name__ == '__main__':
     node = NameNode(sys.argv[1])
-    node.run()
+    node.start()
     cmd = CommandLine()
 
     cmd.register(

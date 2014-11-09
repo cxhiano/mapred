@@ -10,6 +10,7 @@ from core.tasktracker import TaskTracker
 from utils.rmi import *
 from utils.conf_loader import load_config
 from utils.sync import synchronized_method
+from utils.cmd import *
 import utils.serialize as serialize
 
 def is_mapper_task(task_conf):
@@ -38,6 +39,8 @@ class TaskRunner(Configurable):
 
     @synchronized_method('__lock__')
     def kill_task(self, jobid, taskid):
+        jobid = int(jobid)
+        taskid = int(taskid)
         tracker = self.tasks.get((jobid, taskid))
         if tracker is None:
             logging.warning('kill_task: jobid %d taskid %d does not exist' %
@@ -50,12 +53,16 @@ class TaskRunner(Configurable):
         self.slots.put(True)
         del self.tasks[(jobid, taskid)]
 
+    @synchronized_method('__lock__')
+    def list_tasks(self):
+        ret = []
+        for tracker in self.tasks.values():
+            ret.append(tracker.task.name)
+
+        return ret
+
     def run(self):
-        daemon = export(self)
-        thread.start_new_thread(daemon.requestLoop, tuple())
-
         Pyro4.config.SERIALIZER = 'marshal'
-
         while True:
             token = self.slots.get()
             task_conf = serialize.loads(self.jobrunner.get_task(self.name))
@@ -77,5 +84,30 @@ class TaskRunner(Configurable):
                 tracker.start_track()
                 tracker.start_task()
 
+    def start(self):
+        daemon = export(self)
+        thread.start_new_thread(daemon.requestLoop, tuple())
+
+        thread.start_new_thread(self.run, tuple())
+        logging.info('%s started' % self.name)
+
     def heartbeat(self):
         return True
+
+if __name__ == '__main__':
+    taskrunner = TaskRunner(sys.argv[1])
+    taskrunner.start()
+
+    cmd = CommandLine()
+
+    cmd.register(
+        'kill',
+        taskrunner.kill_task,
+        'kill task identified by given jobid and taskid')
+
+    cmd.register(
+        'tasks',
+        print_list(taskrunner.list_tasks),
+        'list running tasks')
+
+    cmd.run()

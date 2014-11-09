@@ -147,7 +147,7 @@ class JobRunner(Configurable):
     def list_task_runners(self):
         return self.task_runners.keys()
 
-    def run(self):
+    def start(self):
         self.ns = Pyro4.locateNS()
 
         if self.ns is None:
@@ -163,7 +163,7 @@ class JobRunner(Configurable):
 
 if __name__ == '__main__':
     jobrunner = JobRunner(sys.argv[1])
-    jobrunner.run()
+    jobrunner.start()
 
     cmd = CommandLine()
 
