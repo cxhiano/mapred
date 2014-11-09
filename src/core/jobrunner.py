@@ -3,8 +3,8 @@ import threading
 import Pyro4
 from Queue import Queue
 from core.job import Job
-from core.configurable import Configurable
 from core.conf import *
+from core.configurable import *
 from utils.conf_loader import load_config
 from utils.rmi import *
 from utils.sync import synchronized_method
@@ -87,7 +87,12 @@ class JobRunner(Configurable):
 
     @synchronized_method('lock')
     def submit_job(self, jobconf):
-        job = Job(self.jobid, serialize.loads(jobconf), self)
+        try:
+            job = Job(self.jobid, serialize.loads(jobconf), self)
+        except ValidationError as e:
+            logging.info('Invalid job config: %s' % e.msg)
+            return -1
+
         self.jobs[self.jobid] = job
         self.jobid += 1
         thread.start_new_thread(job.run, tuple())

@@ -41,16 +41,18 @@ def test_map():
     task.run()
 
 if __name__ == '__main__':
+    '''
     create_input('a.txt', namenode)
     create_input('b.txt', namenode)
     create_input('c.txt', namenode)
     create_input('d.txt', namenode)
+    '''
 
     Pyro4.config.SERIALIZER = 'marshal'
     jobconf1 = {
         'mapper': wordcount.map,
         'reducer': wordcount.reduce,
-        'cnt_reducers': 5,
+        'cnt_reducers': -2,
         'inputs': ['a.txt', 'b.txt'],
         'output_dir': 'mytask1'
     }

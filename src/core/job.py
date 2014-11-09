@@ -2,7 +2,7 @@ import types
 import logging
 import shutil
 from core.conf import *
-from core.configurable import Configurable
+from core.configurable import *
 from core.tasklist import TaskList
 from mrio.record_file import RecordFile
 from utils.splitter import Splitter
@@ -18,6 +18,34 @@ class Job(Configurable):
         self.id = jobid
         self.runner = runner
         self.tasks = {}
+
+    def validate(self, jobconf):
+        cnt_reducers = jobconf.get('cnt_reducers')
+        if type(cnt_reducers) != int or cnt_reducers <= 0:
+            raise ValidationError('Incorrect cnt_reducers')
+
+        output_dir = jobconf.get('output_dir')
+        if type(output_dir) != str:
+            raise ValidationError('output_dir must be a string')
+            # TODO: Test whether output_dir exists
+            pass
+
+        inputs = jobconf.get('inputs')
+        if type(inputs) != list:
+            raise ValidationError('inputs must be list of file name')
+        for fname in inputs:
+            if type(fname) != str or len(fname) == 0:
+                raise ValidationError('inputs must be list of file name')
+
+        mapper = jobconf.get('mapper')
+        if not isinstance(mapper, types.FunctionType) or \
+                mapper.func_code.co_argcount != 3:
+            raise ValidationError('Invalid mapper')
+
+        reducer = jobconf.get('reducer')
+        if not isinstance(reducer, types.FunctionType) or \
+                mapper.func_code.co_argcount != 3:
+            raise ValidationError('Invalid reducer')
 
     def run(self):
         logging.info('start running job %d' % self.id)
