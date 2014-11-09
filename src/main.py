@@ -2,7 +2,6 @@ import time
 import Pyro4
 from core.maptask import MapTask
 from core.reducetask import ReduceTask
-from core.context import Context
 from core.jobrunner import JobRunner
 from utils.rmi import *
 import utils.serialize as serialize
@@ -42,12 +41,10 @@ def test_map():
     task.run()
 
 if __name__ == '__main__':
-    '''
     create_input('a.txt', namenode)
     create_input('b.txt', namenode)
     create_input('c.txt', namenode)
     create_input('d.txt', namenode)
-    '''
 
     Pyro4.config.SERIALIZER = 'marshal'
     jobconf1 = {

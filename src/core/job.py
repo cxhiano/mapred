@@ -17,6 +17,7 @@ class Job(Configurable):
         super(Job, self).__init__(jobconf)
         self.id = jobid
         self.runner = runner
+        self.tasks = {}
 
     def run(self):
         logging.info('start running job %d' % self.id)
@@ -29,6 +30,9 @@ class Job(Configurable):
         self.list = TaskList(self.cnt_mappers)
 
         for taskid in self.list:
+            if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE:
+                self.fail()
+                return
             task_conf = self.make_mapper_task_conf(taskid)
             self.runner.add_task(task_conf)
             logging.info('enqueued map task %d for job %d' % (taskid, self.id))
@@ -37,12 +41,18 @@ class Job(Configurable):
         self.list = TaskList(self.cnt_reducers)
 
         for taskid in self.list:
+            if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE:
+                self.fail()
+                return
             task_conf = self.make_reducer_task_conf(taskid)
             self.runner.add_task(task_conf)
             logging.info('enqueued reduce task %d for job %d' % (taskid, self.id))
 
-        self.cleanup()
         self.runner.report_job_succeed(self.id)
+
+    def fail(self):
+        logging.info('%d tasks failed' % self.list.fails)
+        self.runner.report_job_fail(self.id)
 
     def make_mapper_task_conf(self, taskid):
         return {
