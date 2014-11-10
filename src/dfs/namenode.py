@@ -73,7 +73,11 @@ class NameNode(Configurable):
     def create_file(self, filename, preference=None):
         """ Create file with give filename
 
-        The parameter preference
+        The parameter 'preference' when not None, indicate the name of data node
+        on which the file should be create. If 'preference' is None, the new
+        file will be created on a random datanode.
+
+        Return the data node on which the new file is created
         """
         with self.__lock__:
             if filename in self.files:
@@ -96,6 +100,7 @@ class NameNode(Configurable):
         return datanode
 
     def delete_file(self, filename):
+        """ Delete file with give filename """
         with self.__lock__:
             if not filename in self.files:
                 logging.info('%s does not exist' % filename)
@@ -105,6 +110,7 @@ class NameNode(Configurable):
 
     @synchronized_method('__lock__')
     def get_file(self, filename):
+        """ Get the data node with given file name """
         if not filename in self.files:
             raise IOError('File Not Found')
 
@@ -112,14 +118,21 @@ class NameNode(Configurable):
 
     @synchronized_method('__lock__')
     def list_files(self):
+        """ Return a list of files on this distributed file system """
         return self.files.keys()
 
     @synchronized_method('__lock__')
     def list_nodes(self):
+        """ Return a list of name of active data nodes """
         return self.datanodes.keys()
 
     @synchronized_method('__lock__')
     def check_datanodes(self):
+        """ Check data nodes status, remove unhealthy data nodes and update
+        file meta data
+
+        Files on unhealthy data nodes will be lost.
+        """
         for name in self.datanodes.keys():
             datanode = self.datanodes[name]
             try:
@@ -132,6 +145,7 @@ class NameNode(Configurable):
                         del self.files[fname]
 
     def healthcheck(self):
+        """ Periodically check data nodes status """
         while True:
             time.sleep(NAMENODE_HEALTH_CHECK_INTERVAL)
             self.check_datanodes()

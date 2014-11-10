@@ -11,6 +11,9 @@ from utils.rmi import *
 from utils.cmd import *
 
 def openfile(mode):
+    """ Decorator for methods in data nodes. Provides routine for openning
+    file.
+    """
     def actual_decorator(func):
         def wrapper(self, filename, *args):
             if not filename in self.files:
@@ -38,10 +41,11 @@ class DataNode(Configurable):
         self.files = {}
         self.__lock__ = threading.RLock()
 
-    def get_name(self):
-        return self.name
-
     def start(self):
+        """ Start running a data node in background.
+
+        Report to name node and start running the data node on a thread
+        """
         self.ns = Pyro4.locateNS()
 
         if self.ns is None:
@@ -56,10 +60,14 @@ class DataNode(Configurable):
         logging.info('%s started' % self.name)
 
     def real_filename(self, filename):
+        """ Convert a filename in distributed system to local file name where
+        the actual file will be stored.
+        """
         return ''.join([self.datadir, filename])
 
     @synchronized_method('__lock__')
     def create_file(self, filename):
+        """ Create a file on the data node """
         real_fn = self.real_filename(filename)
         logging.debug('Creating file at %s' % real_fn)
 
@@ -71,6 +79,7 @@ class DataNode(Configurable):
 
     @synchronized_method('__lock__')
     def delete_file(self, filename):
+        """ Delete file with given name on this data node """
         if not filename in self.files:
             logging.warning('%s does not exist' % filename)
             return
@@ -85,18 +94,21 @@ class DataNode(Configurable):
     @synchronized_method('__lock__')
     @openfile('r')
     def read_file(self, file_, offset, nbytes):
+        """ Read 'nbytes' starts at 'offset' from a file """
         file_.seek(offset)
         return file_.read(nbytes)
 
     @synchronized_method('__lock__')
     @openfile('r')
     def readline_file(self, file_, offset):
+        """ Read one line starts at 'offset' from a file """
         file_.seek(offset)
         return file_.readline()
 
     @synchronized_method('__lock__')
     @openfile('w')
     def write_file(self, file_, offset, buf):
+        """ Write the content of buf to a file starts at 'offset' """
         file_.seek(offset)
         file_.write(buf)
         file_.flush()
@@ -104,16 +116,13 @@ class DataNode(Configurable):
 
     @synchronized_method('__lock__')
     @openfile('rw')
-    def seek_file(self, file_, offset):
-        file_.seek(offset)
-
-    @synchronized_method('__lock__')
-    @openfile('rw')
     def close_file(self, file_):
+        """ Close a file """
         file_.close()
 
     @synchronized_method('__lock__')
     def list_files(self):
+        """ List all files on this data node """
         return self.files.keys()
 
     def heartbeat(self):
