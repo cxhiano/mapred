@@ -13,6 +13,8 @@ MAP_PHASE = 0
 REDUCE_PHASE = 1
 
 class Job(Configurable):
+    """ A job in map reduce system """
+
     def __init__(self, jobid, jobconf, runner):
         super(Job, self).__init__(jobconf)
         self.runner = runner
@@ -27,10 +29,12 @@ class Job(Configurable):
         self.failed_reducers = 0
 
     def terminate(self):
+        """ Terminate the job """
         self.terminate_flag = True
         self.list.report_failed(0)
 
     def validate(self, jobconf):
+        """ Validate job config """
         cnt_reducers = jobconf.get('cnt_reducers')
         if type(cnt_reducers) != int or cnt_reducers <= 0:
             raise ValidationError('Incorrect cnt_reducers')
@@ -57,6 +61,14 @@ class Job(Configurable):
             raise ValidationError('Invalid reducer')
 
     def run(self):
+        """ Run the job
+
+        1. Split input files into blocks
+        2. Create all needed file in map reduce process
+        3. Generate and send map task to job runner for dispatching
+        4. Generate and send reduce task to job runner for dispatching
+        5. Clean up
+        """
         logging.info('start running job %d' % self.id)
 
         try:
@@ -111,10 +123,12 @@ class Job(Configurable):
         self.runner.report_job_succeed(self.id)
 
     def fail(self):
+        """ The job failed, do clean up and report to job runner """
         self.cleanup()
         self.runner.report_job_fail(self.id)
 
     def make_mapper_task_conf(self, taskid):
+        """ Generate map task config for given taskid """
         return {
             'jobid': self.id,
             'taskid': taskid,
@@ -124,6 +138,7 @@ class Job(Configurable):
         }
 
     def make_reducer_task_conf(self, taskid):
+        """ Generate reduce task config for given taskid """
         return {
             'jobid': self.id,
             'taskid': taskid,
@@ -134,6 +149,7 @@ class Job(Configurable):
         }
 
     def split_input(self):
+        """ Split input files into blocks """
         splitter = Splitter(RECORDS_PER_BLOCK)
         results = []
         input_files = []
@@ -165,6 +181,10 @@ class Job(Configurable):
         return results
 
     def create_output_files(self):
+        """ Create output files that will be used during the job
+
+        All reducer output files and mapper output files will be created
+        """
         datanode = None
         for i in range(self.cnt_reducers):
             fname = '%s.%s' % (self.output_dir, reduce_output(self.id, i))

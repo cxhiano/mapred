@@ -1,3 +1,16 @@
+""" Implementation of a job runner which coordinates job running.
+
+Job runner maintains a task queue. Task runners will get tasks from job runner
+whenever they can start a new task. Upon task failed or succeeded, task runners
+will report to job runner. Job runner does not need to know all task runner at
+the beginning, accounts for task runners will be created once they try to get
+tasks from job runner. Job runner also periodically iterate through task runners
+accounts to check task runner status. Once discover unhealthy task runners,
+their accounts will be removed
+
+When running this module, the job runner will run in backgroung and a command
+line will be started served as the management tool for the job runner.
+"""
 import time
 import thread
 import threading
@@ -28,6 +41,12 @@ class JobRunner(Configurable):
         return self.name
 
     def get_task(self, task_runner):
+        """ Get a task config from task queue
+
+        This is also a method for a task runner to report itself to job runner.
+        Job runner will keep an account of the task runner when the task runner
+        get its first task from it.
+        """
         task_conf = self.task_queue.get()
         jobid, taskid = task_conf['jobid'], task_conf['taskid']
         with self.__lock__:
@@ -42,10 +61,17 @@ class JobRunner(Configurable):
         return serialize.dumps(task_conf)
 
     def add_task(self, task_conf):
+        """ Add a task to the task queue """
         self.task_queue.put(task_conf)
 
     @synchronized_method('__lock__')
     def check_task_runners(self):
+        """ Check task runners status and remove unhealthy task runners
+
+        This mothod iterates through all task runners and tries to call their
+        heartbeat method. If failed, the account of the failed task runner
+        will be removed and tasks running on it will be reported as failed
+        """
         for name in self.task_runners.keys():
             task_runner = self.task_runners[name]
             try:
@@ -58,6 +84,7 @@ class JobRunner(Configurable):
                         self.report_task_fail(jobid, taskid)
 
     def healthcheck(self):
+        """ Periodically check task runners status """
         while True:
             time.sleep(HEARTBEAT_INTERVAL)
             self.check_task_runners()

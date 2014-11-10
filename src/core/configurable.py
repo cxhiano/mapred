@@ -5,6 +5,10 @@ class ValidationError(Exception):
         self.msg = msg
 
 class Configurable(object):
+    """ An remote object that can be configured by a dict
+
+    Keys in dict will be set as attributes to the object
+    """
     def __init__(self, conf):
         self.validate(conf)
         for attr in conf:
