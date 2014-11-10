@@ -1,3 +1,12 @@
+""" Implementation of data node in distributed file system and management
+command line.
+
+This module depends on Pyro4. The data node will be run as a remote object
+server. It can be accessed through Pyro name server.
+
+When running this module, the data node will run in backgroung and a command
+line will be started served as the management tool for the data node.
+"""
 import os
 import sys
 import thread

@@ -1,11 +1,22 @@
+""" This module provides ways to access a file in distributed system and
+interpret its content as records. (key/value pair)
+
+In a record file, \n is interpreted as separator of records and \t is
+interpreted as separator of key and value
+"""
+
 def record_iter(file_):
+    """ Iter through a record file and yield key value pair for each record
+    in the file
+    """
     for record in file_:
         yield record[:-1].split('\t')
 
 class RecordFile:
-    '''
-    Not thread-safe
-    '''
+    """ A file in distributed system whose content can be interpreted as records
+
+    This object is NOT thread safe.
+    """
     def __init__(self, filename, namenode):
         self.datanode = namenode.get_file(filename)
         self.filename = filename

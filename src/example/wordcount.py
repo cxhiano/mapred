@@ -8,7 +8,7 @@ def map(key, value, out):
         if len(word) > 0:
             out.put(word, 1)
 
-    time.sleep(5)
+    time.sleep(1)
 
 def reduce(key, values, out):
     import random

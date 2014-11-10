@@ -29,7 +29,7 @@ class ReduceTask(Task):
                 self.inputs]
             reduce_input = sort_files(inputs, self.tmpdir)
             output_file = RecordFile(self.output_fname, self.namenode)
-            out = OutputCollector([output_file], 1)
+            out = OutputCollector([output_file])
 
             prev_key = None
             values = []

@@ -1,3 +1,12 @@
+""" Implementation of name node in distributed file system and management
+command line.
+
+This module depends on Pyro4. The name node will be run as a remote object
+server. It can be accessed through Pyro name server.
+
+When running this module, the name node will run in backgroung and a command
+line will be started served as the management tool for the name node.
+"""
 import sys
 import traceback
 import thread

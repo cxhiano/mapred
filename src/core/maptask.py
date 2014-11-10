@@ -21,7 +21,7 @@ class MapTask(Task):
                 out_files.append(RecordFile(fname, self.namenode))
 
             input_ = RecordFile(self.input, self.namenode)
-            out = OutputCollector(out_files, self.cnt_reducers)
+            out = OutputCollector(out_files)
 
             line_num = 0
             for line in input_:
