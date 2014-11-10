@@ -62,8 +62,13 @@ class JobRunner(Configurable):
             task_runner_name))
         return serialize.dumps(task_conf)
 
+    #@synchronized_method('__lock__')
     def add_task(self, task_conf):
         """ Add a task to the task queue """
+        jobid, taskid = task_conf['jobid'], task_conf['taskid']
+        if (jobid, taskid) in self.running_tasks:
+            logging.info('job %d task %d is already running!' % (jobid, taskid))
+            return
         self.task_queue.put(task_conf)
 
     @synchronized_method('__lock__')
@@ -94,7 +99,7 @@ class JobRunner(Configurable):
     @synchronized_method('__lock__')
     def report_task_fail(self, jobid, taskid):
         job = self.jobs.get(jobid)
-        if job is None:
+        if job is None or (jobid, taskid) not in self.running_tasks:
             logging.info(('Receive task fail report with unknown jobid %d '
                 'taskid %d') % (jobid, taskid))
             return
@@ -107,7 +112,7 @@ class JobRunner(Configurable):
     @synchronized_method('__lock__')
     def report_task_succeed(self, jobid, taskid):
         job = self.jobs.get(jobid)
-        if job is None:
+        if job is None or (jobid, taskid) not in self.running_tasks:
             logging.info('Receive task succeed report with unknown jobid %d' \
                 % jobid)
             return
@@ -137,6 +142,11 @@ class JobRunner(Configurable):
 
     @synchronized_method('__lock__')
     def submit_job(self, jobconf):
+        """ Submit a job to job runner
+
+        jobconf will be validated before launching the job. If the job is
+        launched successfully, return joid. Otherwise return -1
+        """
         try:
             job = Job(self.jobid, serialize.loads(jobconf), self)
         except ValidationError as e:
@@ -161,6 +171,16 @@ class JobRunner(Configurable):
                 task_runner = self.running_tasks[(jid, taskid)]
                 task_runner.kill_task(jid, taskid)
                 del self.running_tasks[(jid, taskid)]
+
+    @synchronized_method('__lock__')
+    def kill_all_tasks(self, job):
+        """ Kill all tasks and report them as failed of given jobs """
+        for jobid, taskid in self.running_tasks.keys():
+            if jobid == job.id:
+                task_runner = self.running_tasks[(jobid, taskid)]
+                task_runner.kill_task(jobid, taskid)
+                del self.running_tasks[(jobid, taskid)]
+                job.report_task_fail(taskid)
 
     def job_detail(self, job):
         string = ('job %d:\n'

@@ -26,7 +26,7 @@ def openfile(mode):
     def actual_decorator(func):
         def wrapper(self, filename, *args):
             if not filename in self.files:
-                raise IOError('File not found')
+                raise IOError('File not found %s' % filename)
             real_fn = self.real_filename(filename)
 
             file_ = self.files[filename]

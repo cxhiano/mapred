@@ -4,7 +4,7 @@ import logging
 import thread
 import Pyro4
 from multiprocessing import Queue, Process
-from core.conf import TASK_TIMEOUT
+from core.conf import TASK_RUNNER_TIMEOUT
 from utils.rmi import retrieve_object
 
 COMPLETE = 0
@@ -51,10 +51,10 @@ class TaskTracker(object):
 
     def track(self):
         """ Try to get flag put by the task from the queue, timeout if tracker
-        cannot get anything from the queue for TASK_TIMEOUT seconds.
+        cannot get anything from the queue for TASK_RUNNER_TIMEOUT seconds.
         """
         try:
-            code = self.message.get(timeout=TASK_TIMEOUT)
+            code = self.message.get(timeout=TASK_RUNNER_TIMEOUT)
         except:
             logging.info('%s timeout' % self.task.name)
             self.runner.terminate()

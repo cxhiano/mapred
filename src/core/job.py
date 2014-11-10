@@ -92,13 +92,21 @@ class Job(Configurable):
         self.phase = MAP_PHASE
         self.list = TaskList(self.cnt_mappers)
 
-        for taskid in self.list:
+        while True:
             if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE or \
                     self.terminate_flag:
                 logging.info('job %d terminated: %d tasks failed' % (self.id,
                     self.list.fails))
                 self.fail()
                 return
+            try:
+                taskid = self.list.next(JOB_RUNNER_TIMEOUT)
+            except:
+                logging.info('job %d: map timeout! Kill all tasks' % self.id)
+                self.runner.kill_all_tasks(self)
+                continue
+            if taskid is None:
+                break
             task_conf = self.make_mapper_task_conf(taskid)
             self.runner.add_task(task_conf)
             logging.info('enqueued map task %d for job %d' % (taskid, self.id))
@@ -106,13 +114,21 @@ class Job(Configurable):
         self.phase = REDUCE_PHASE
         self.list = TaskList(self.cnt_reducers)
 
-        for taskid in self.list:
+        while True:
             if self.list.fails >= JOB_MAXIMUM_TASK_FAILURE or \
                     self.terminate_flag:
                 logging.info('job %d terminated: %d tasks failed' % (self.id,
                     self.list.fails))
                 self.fail()
                 return
+            try:
+                taskid = self.list.next(JOB_RUNNER_TIMEOUT)
+            except:
+                logging.info('job %d: reduce timeout! Kill all tasks' % self.id)
+                self.runner.kill_all_tasks(self)
+                continue
+            if taskid is None:
+                break
             task_conf = self.make_reducer_task_conf(taskid)
             self.runner.add_task(task_conf)
             logging.info('enqueued reduce task %d for job %d' % (taskid, self.id))
