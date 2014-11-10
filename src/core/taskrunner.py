@@ -1,3 +1,9 @@
+""" Implementation of a task runner that runs map tasks and reduce tasks
+
+A task runner has several slots for task running. It get task config from job
+runner and create a task accordingly. Then launch a process to run the task.
+Task runner also monitor the task running and report timeout and failure
+"""
 import thread
 import threading
 import Pyro4
@@ -50,6 +56,9 @@ class TaskRunner(Configurable):
 
     @synchronized_method('__lock__')
     def reap_task(self, jobid, taskid):
+        """ When a task completed or failed or timeout, empty its slot for new
+        task.
+        """
         self.slots.put(True)
         del self.tasks[(jobid, taskid)]
 
@@ -62,6 +71,12 @@ class TaskRunner(Configurable):
         return ret
 
     def run(self):
+        """ The main routine of task runner
+
+        When there are available slots, task runner will try to get task from
+        job runner and launch a process to run each task. Tasks will be monitor
+        by task trackers.
+        """
         Pyro4.config.SERIALIZER = 'marshal'
         while True:
             token = self.slots.get()
@@ -69,7 +84,6 @@ class TaskRunner(Configurable):
             logging.info('Got task with config %s' % str(task_conf))
 
             task_conf['namenode'] = self.namenode
-            task_conf['jobrunner'] = self.jobrunner.get_name()
 
             if is_mapper_task(task_conf):
                 task = MapTask(task_conf)
@@ -77,7 +91,7 @@ class TaskRunner(Configurable):
                 task_conf['tmpdir'] = self.tmpdir
                 task = ReduceTask(task_conf)
 
-            tracker = TaskTracker(task, self.reap_task)
+            tracker = TaskTracker(task, self.jobrunner.get_name(), self.reap_task)
 
             with self.__lock__:
                 self.tasks[(task.jobid, task.taskid)] = tracker
@@ -85,6 +99,7 @@ class TaskRunner(Configurable):
                 tracker.start_task()
 
     def start(self):
+        """ Export self as remote object and start main routine """
         daemon = export(self)
         thread.start_new_thread(daemon.requestLoop, tuple())
 

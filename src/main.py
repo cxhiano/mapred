@@ -37,7 +37,7 @@ if __name__ == '__main__':
         'reducer': wordcount.reduce,
         'cnt_reducers': 2,
         'inputs': ['a.txt', 'b.txt'],
-        'output_dir': 'mytask3'
+        'output_dir': 'mytask0'
     }
 
     jobconf2 = {
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         'reducer': wordcount.reduce,
         'cnt_reducers': 1,
         'inputs': ['a.txt', 'b.txt'],
-        'output_dir': 'mytask1'
+        'output_dir': 'mytask2'
     }
 
     jr = retrieve_object(ns, 'JobRunner')

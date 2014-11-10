@@ -40,7 +40,7 @@ class JobRunner(Configurable):
     def get_name(self):
         return self.name
 
-    def get_task(self, task_runner):
+    def get_task(self, task_runner_name):
         """ Get a task config from task queue
 
         This is also a method for a task runner to report itself to job runner.
@@ -50,14 +50,16 @@ class JobRunner(Configurable):
         task_conf = self.task_queue.get()
         jobid, taskid = task_conf['jobid'], task_conf['taskid']
         with self.__lock__:
-            if not task_runner in self.task_runners:
+            if not task_runner_name in self.task_runners:
                 logging.info('receive get task request from new task runner %s'
-                    % task_runner)
-                self.task_runners[task_runner] = retrieve_object(self.ns,
-                    task_runner)
+                    % task_runner_name)
+                self.task_runners[task_runner_name] = retrieve_object(self.ns,
+                    task_runner_name)
 
-            task_runner = self.task_runners[task_runner]
+            task_runner = self.task_runners[task_runner_name]
             self.running_tasks[(jobid, taskid)] = task_runner
+        logging.debug('dispatch task %s to %s' % (str(task_conf),
+            task_runner_name))
         return serialize.dumps(task_conf)
 
     def add_task(self, task_conf):

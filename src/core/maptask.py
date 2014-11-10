@@ -1,3 +1,5 @@
+""" This module provides functionality to run a map task """
+
 import sys
 import logging
 from core.task import Task
@@ -12,39 +14,30 @@ class MapTask(Task):
         self.out_files = []
 
     def run(self):
-        try:
-            datanode = None
-            out_files = []
+        """ Run a map task
 
-            for i in range(self.cnt_reducers):
-                fname = map_output(self.jobid, self.taskid, i)
-                out_files.append(RecordFile(fname, self.namenode))
+        Feed lines into mapper, collect output and write to corresponding
+        partition
+        """
+        datanode = None
+        out_files = []
 
-            input_ = RecordFile(self.input, self.namenode)
-            out = OutputCollector(out_files)
+        for i in range(self.cnt_reducers):
+            fname = map_output(self.jobid, self.taskid, i)
+            out_files.append(RecordFile(fname, self.namenode))
 
-            line_num = 0
-            for line in input_:
-                self.mapper(line_num, line, out)
-                line_num += 1
+        input_ = RecordFile(self.input, self.namenode)
+        out = OutputCollector(out_files)
 
-            out.flush()
+        line_num = 0
+        for line in input_:
+            self.mapper(line_num, line, out)
+            line_num += 1
 
-            for file_ in out_files:
-                file_.close()
+        out.flush()
 
-        except:
-            logging.info('%s error when running: %s' % (self.name,
-                sys.exc_info()[1]))
+        for file_ in out_files:
+            file_.close()
 
-            return False
-
-        logging.info('%s completed' % self.name)
-
-        self.jobrunner.report_task_succeed(self.jobid, self.taskid)
-
-        return True
-
-    def fail(self):
-        logging.info('%s failed: %s' % (self.name, sys.exc_info()[1]))
-        self.jobrunner.report_task_fail(self.jobid, self.taskid)
+    def cleanup(self):
+        pass

@@ -1,3 +1,5 @@
+""" This module provides functionality to run a map task """
+
 import os
 import sys
 import logging
@@ -18,54 +20,45 @@ class ReduceTask(Task):
             self.taskid))
 
     def run(self):
+        """ Run a reduce task
+
+        First create a temporary directory for merge sort. Then merge sort all
+        input files and feed records to reducer
+        """
         try:
             os.mkdir(self.tmpdir)
-        except OSError:
+        except OSError as e:
             logging.info('%s cannot create dir %s: %s' % (self.name, self.tmpdir,
-                sys.exc_info()[1]))
+                e.message))
 
-        try:
-            inputs = [RecordFile(fname, self.namenode) for fname in \
-                self.inputs]
-            reduce_input = sort_files(inputs, self.tmpdir)
-            output_file = RecordFile(self.output_fname, self.namenode)
-            out = OutputCollector([output_file])
+        inputs = [RecordFile(fname, self.namenode) for fname in \
+            self.inputs]
+        reduce_input = sort_files(inputs, self.tmpdir)
+        output_file = RecordFile(self.output_fname, self.namenode)
+        out = OutputCollector([output_file])
 
-            prev_key = None
-            values = []
-            for key, value in record_iter(reduce_input):
-                if not prev_key is None and key != prev_key:
-                    self.reducer(prev_key, values, out)
-                    values = []
-                values.append(value)
-                prev_key = key
-
-            if len(values) > 0:
+        prev_key = None
+        values = []
+        for key, value in record_iter(reduce_input):
+            if not prev_key is None and key != prev_key:
                 self.reducer(prev_key, values, out)
+                values = []
+            values.append(value)
+            prev_key = key
 
-            out.flush()
-            output_file.close()
-        except:
-            logging.info('%s error when running: %s' % (self.name,
-                sys.exc_info()[1]))
-            return False
+        if len(values) > 0:
+            self.reducer(prev_key, values, out)
+
+        out.flush()
+        output_file.close()
 
         logging.info('%s completed' % self.name)
 
-        self.jobrunner.report_task_succeed(self.jobid, self.taskid)
-
         try:
             shutil.rmtree(self.tmpdir)
-        except OSError:
-            logging.warning('%s: remove tmp dir failed: %s' %
-                (self.name, sys.exc_info()[1]))
-
-        return True
-
-    def fail(self):
-        logging.info('%s failed' % self.name)
-        self.cleanup()
-        self.jobrunner.report_task_fail(self.jobid, self.taskid)
+        except OSError as e:
+            logging.warning('%s: remove tmp dir failed: %s' % (self.name,
+                e.message))
 
     def cleanup(self):
         try:

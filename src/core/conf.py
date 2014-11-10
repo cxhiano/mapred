@@ -5,7 +5,7 @@ logging.basicConfig(level=logging.DEBUG)
 # The number of tasks a task runner can run concurrently
 TASK_RUNNER_SLOTS = 5
 # A task will timeout if it cannot finish within this amount of time
-TASK_TIMEOUT = 10000
+TASK_TIMEOUT = 3
 
 # The maximum number of queued task in job runner
 JOB_RUNNER_SLOTS = 1

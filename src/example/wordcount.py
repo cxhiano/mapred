@@ -1,7 +1,13 @@
 def map(key, value, out):
+    import random
+
     for word in value.split():
         if len(word) > 0:
             out.put(word, 1)
+    if random.randint(0, 50) == 0:
+        print 'random failed'
+        while True:
+            pass
 
 def reduce(key, values, out):
     cnt = 0
