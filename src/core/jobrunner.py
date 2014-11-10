@@ -75,7 +75,7 @@ class JobRunner(Configurable):
     def check_task_runners(self):
         """ Check task runners status and remove unhealthy task runners
 
-        This mothod iterates through all task runners and tries to call their
+        This method iterates through all task runners and tries to call their
         heartbeat method. If failed, the account of the failed task runner
         will be removed and tasks running on it will be reported as failed
         """
