@@ -67,7 +67,7 @@ class DataNode(Configurable):
             raise IOError('File %s already exists!' % filename)
         self.files[filename] = open(real_fn, 'w')
 
-        self.namenode.create_file_meta(filename, self)
+        self.namenode.create_file_meta(filename, self.name)
 
     @synchronized_method('__lock__')
     def delete_file(self, filename):
@@ -116,7 +116,7 @@ class DataNode(Configurable):
     def list_files(self):
         return self.files.keys()
 
-    def heart_beat(self):
+    def heartbeat(self):
         return True
 
 if __name__ == '__main__':

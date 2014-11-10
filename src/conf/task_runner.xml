@@ -8,12 +8,12 @@
 
     <host>localhost</host>
 
-    <port>11231</port>
+    <port>11213</port>
 
     <tmpdir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/tmp</tmpdir>
 
     <pyroNS>
         <host>localhost</host>
-        <port>9999</port>
+        <port>8888</port>
     </pyroNS>
 </jobrunner>

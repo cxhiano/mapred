@@ -12,7 +12,7 @@
 
     <pyroNS>
         <host>localhost</host>
-        <port>9999</port>
+        <port>8888</port>
     </pyroNS>
 
 </datanode>

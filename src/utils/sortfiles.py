@@ -21,7 +21,7 @@ def sort_files(inputs, tmpdir):
     blocks = []
     for line in line_iter(inputs):
         buf.append(line)
-        if len(buf) == MAX_LINE_IN_BUFFER:
+        if len(buf) == MAX_RECORDS_IN_BUFFER:
             blocks.append(make_block(buf, tmpdir))
             buf = []
     if len(buf) > 0:

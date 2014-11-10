@@ -65,7 +65,7 @@ class JobRunner(Configurable):
     @synchronized_method('__lock__')
     def report_task_fail(self, jobid, taskid):
         job = self.jobs.get(jobid)
-        if not (jobid, taskid) in self.running_tasks:
+        if job is None:
             logging.info(('Receive task fail report with unknown jobid %d '
                 'taskid %d') % (jobid, taskid))
             return
@@ -78,7 +78,7 @@ class JobRunner(Configurable):
     @synchronized_method('__lock__')
     def report_task_succeed(self, jobid, taskid):
         job = self.jobs.get(jobid)
-        if not (jobid, taskid) in self.running_tasks:
+        if job is None:
             logging.info('Receive task succeed report with unknown jobid %d' \
                 % jobid)
             return

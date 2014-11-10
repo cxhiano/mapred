@@ -4,10 +4,10 @@
 
     <host>localhost</host>
 
-    <port>12354</port>
+    <port>13254</port>
 
     <pyroNS>
         <host>localhost</host>
-        <port>9999</port>
+        <port>8888</port>
     </pyroNS>
 </namenode>
