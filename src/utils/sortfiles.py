@@ -1,31 +1,39 @@
+""" Implementation of merge sort """
+
 import heapq, tempfile
 import time
 from utils.conf import *
 
-def line_iter(files):
+def _record_iter(files):
     for f in files:
-        for line in f:
-            if len(line) > 0:
-                yield line
+        for record in f:
+            if len(record) > 0:
+                yield record
 
-def make_block(buf, tmpdir):
+def _make_block(buf, tmpdir):
     file_ = tempfile.TemporaryFile(dir=tmpdir)
     buf.sort()
-    for line in buf:
-        file_.write(line)
+    for record in buf:
+        file_.write(record)
     file_.seek(0)
-    return line_iter([file_])
+    return _record_iter([file_])
 
 def sort_files(inputs, tmpdir):
+    """ Perform merge sort on a list of files
+
+    @param inputs A list of files
+    @param tmpdir Directory for temporary files created during the merge sort
+    @return The function yield record one by one after sorting
+    """
     buf = []
     blocks = []
-    for line in line_iter(inputs):
-        buf.append(line)
+    for record in _record_iter(inputs):
+        buf.append(record)
         if len(buf) == MAX_RECORDS_IN_BUFFER:
-            blocks.append(make_block(buf, tmpdir))
+            blocks.append(_make_block(buf, tmpdir))
             buf = []
     if len(buf) > 0:
-        blocks.append(make_block(buf, tmpdir))
+        blocks.append(_make_block(buf, tmpdir))
 
-    for line in heapq.merge(*blocks):
-        yield line
+    for record in heapq.merge(*blocks):
+        yield record

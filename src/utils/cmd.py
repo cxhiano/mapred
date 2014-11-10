@@ -1,6 +1,13 @@
+""" Implementation of a general command line
+
+Ctrl-D to exit. Type command 'help' to get help
+"""
 import sys
 
 def print_list(method):
+    """ Help function to convert a function that returns a list to a function
+    that prints item in the list
+    """
     def inner():
         for item in method():
             print item
@@ -42,6 +49,8 @@ class CommandLine(object):
                     print 'error! %s' % e.message
 
     def register(self, cmd, handler, usage):
+        """ Register a command with name, handler and usage to the command line
+        """
         self.handlers[cmd] = handler
         self.usages[cmd] = usage
 

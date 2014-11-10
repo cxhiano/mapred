@@ -1,4 +1,2 @@
-PYRO_LOCATE_NS_RETRY_INTERVAL = 2
-PYRO_LOCATE_NS_RETRY_TIMES = 3
-
+# When doing merge sorts, the maximum number of records kept in memory buffer
 MAX_RECORDS_IN_BUFFER = 20

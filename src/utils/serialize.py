@@ -1,6 +1,18 @@
+""" This module provides functions to serialize and deserialize python dict
+which contains function values
+
+Noted that functions to be serialized should not depend on global variable. When
+deserializing, only __builtins__ are provided as globals
+"""
+
 import types
 
 def loads(dic):
+    """ Deserialize
+
+    Transform func_code back into function, only provide __builtins__ as its
+    globals.
+    """
     ret = {}
     for key in dic:
         value = dic[key]
@@ -13,6 +25,10 @@ def loads(dic):
     return ret
 
 def dumps(dic):
+    """ Serialize
+
+    Transform function to its func_code
+    """
     ret = {}
     for key in dic:
         value = dic[key]
@@ -22,18 +38,3 @@ def dumps(dic):
             ret[key] = value
 
     return ret
-
-def obj_dumps(obj):
-    skeleton = {}
-    for attr_name in dir(obj):
-        if attr_name.startswith('_'):
-            continue
-        attr = getattr(obj, attr_name)
-        if isinstance(attr, types.MethodType):
-            continue
-        if isinstance(attr, types.FunctionType):
-            skeleton[attr_name] = attr.func_code
-        else:
-            skeleton[attr_name] = attr
-
-    return skeleton

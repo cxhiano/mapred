@@ -1,3 +1,6 @@
+""" This module provides helper functions to retrieve and export remote objects
+using Pyro4
+"""
 import time
 import logging
 import Pyro4

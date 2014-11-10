@@ -1,3 +1,9 @@
+""" This module specifies file names for map reduce tasks
+
+Files created during mapreduce is named by combining its usage, job id and task
+id so that they are globally unique among jobs and tasks
+"""
+
 def map_input(jobid, taskid):
     return 'mapin_%d_%d' % (jobid, taskid)
 

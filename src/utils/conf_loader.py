@@ -1,3 +1,4 @@
+""" This module provide helper function to load config from xml files """
 import xml.etree.ElementTree as ET
 
 def _xml2dict(node, dict_):
@@ -12,6 +13,7 @@ def _xml2dict(node, dict_):
             dict_[child.tag] = tmp
 
 def load_config(filename):
+    """ Load config from xml file and transform it to a dict """
     conf = {}
     tree = ET.parse(filename)
     _xml2dict(tree.getroot(), conf)
