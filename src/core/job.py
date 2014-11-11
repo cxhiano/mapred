@@ -235,5 +235,5 @@ class Job(Configurable):
         for fname in self.open_files:
             try:
                 namenode.delete_file(fname)
-            except IOError:
-                logging.warning('Error deleting file %s' % fname)
+            except Exception as e:
+                logging.warning('Error deleting file %s: %s' % (fname, e.message))

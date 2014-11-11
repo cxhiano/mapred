@@ -94,9 +94,12 @@ class TaskRunner(Configurable):
             tracker = TaskTracker(task, self.jobrunner.get_name(), self.reap_task)
 
             with self.__lock__:
-                self.tasks[(task.jobid, task.taskid)] = tracker
-                tracker.start_track()
-                tracker.start_task()
+                if (task.jobid, task.taskid) in self.tasks:
+                    logging.info('%s already running' % task.name)
+                else:
+                    self.tasks[(task.jobid, task.taskid)] = tracker
+                    tracker.start_track()
+                    tracker.start_task()
 
     def start(self):
         """ Export self as remote object and start main routine """

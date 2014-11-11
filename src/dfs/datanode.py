@@ -82,9 +82,9 @@ class DataNode(Configurable):
 
         if filename in self.files:
             raise IOError('File %s already exists!' % filename)
-        self.files[filename] = open(real_fn, 'w')
 
         self.namenode.create_file_meta(filename, self.name)
+        self.files[filename] = open(real_fn, 'w')
 
     @synchronized_method('__lock__')
     def delete_file(self, filename):
@@ -94,11 +94,11 @@ class DataNode(Configurable):
             return
 
         logging.info('deleting file %s' % filename)
+        self.namenode.delete_file_meta(filename)
 
         real_fn = self.real_filename(filename)
         os.remove(real_fn)
         del self.files[filename]
-        self.namenode.delete_file_meta(filename)
 
     @synchronized_method('__lock__')
     @openfile('r')

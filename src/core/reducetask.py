@@ -31,9 +31,8 @@ class ReduceTask(Task):
             logging.info('%s cannot create dir %s: %s' % (self.name, self.tmpdir,
                 e.message))
 
-        inputs = [RecordFile(fname, self.namenode) for fname in \
-            self.inputs]
-        reduce_input = sort_files(inputs, self.tmpdir)
+        reduce_input = sort_files(self.inputs, self.tmpdir, self.namenode)
+        logging.info('reduce task: sorting file done!')
         output_file = RecordFile(self.output_fname, self.namenode)
         out = OutputCollector([output_file])
 

@@ -62,7 +62,6 @@ class JobRunner(Configurable):
             task_runner_name))
         return serialize.dumps(task_conf)
 
-    #@synchronized_method('__lock__')
     def add_task(self, task_conf):
         """ Add a task to the task queue """
         jobid, taskid = task_conf['jobid'], task_conf['taskid']
@@ -147,6 +146,7 @@ class JobRunner(Configurable):
         jobconf will be validated before launching the job. If the job is
         launched successfully, return joid. Otherwise return -1
         """
+        logging.info('got job with config %s' % jobconf)
         try:
             job = Job(self.jobid, serialize.loads(jobconf), self)
         except ValidationError as e:
@@ -178,7 +178,11 @@ class JobRunner(Configurable):
         for jobid, taskid in self.running_tasks.keys():
             if jobid == job.id:
                 task_runner = self.running_tasks[(jobid, taskid)]
-                task_runner.kill_task(jobid, taskid)
+                try:
+                    task_runner.kill_task(jobid, taskid)
+                except Exception as e:
+                    logging.info('kill job %d task id failed: %s' % (jobid,
+                        taskid, e.message))
                 del self.running_tasks[(jobid, taskid)]
                 job.report_task_fail(taskid)
 

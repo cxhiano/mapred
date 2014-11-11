@@ -76,7 +76,7 @@ class NameNode(Configurable):
     def delete_file_meta(self, filename):
         """ Delete file mete data for given filename """
         if not filename in self.files:
-            raise IOError('File not found!')
+            raise IOError('File %s not found!' % filename)
         del self.files[filename]
 
     def create_file(self, filename, preference=None):
@@ -91,6 +91,8 @@ class NameNode(Configurable):
         with self.__lock__:
             if filename in self.files:
                 raise IOError('File %s already exists!' % filename)
+
+        logging.info('create file %s' % filename)
 
         if preference is None:
             n = len(self.datanodes)
@@ -121,7 +123,7 @@ class NameNode(Configurable):
     def get_file(self, filename):
         """ Get the data node with given file name """
         if not filename in self.files:
-            raise IOError('File Not Found')
+            raise IOError('File %s Not Found' % filename)
 
         return self.datanodes[self.files[filename]]
 

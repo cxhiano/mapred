@@ -33,16 +33,16 @@ class TaskList:
         if taskid not in self.completed:
             self.completed.add(taskid)
         if taskid not in self.in_queue:
-            self.queue.put((taskid, SUCCEEDED))
             self.in_queue.add(taskid)
+            self.queue.put((taskid, SUCCEEDED))
 
     @synchronized_method('__lock__')
     def report_failed(self, taskid):
         """ Report a task failed. The task will be put back into the list """
         self.fails += 1
         if taskid not in self.in_queue:
-            self.queue.put((taskid, FAILED))
             self.in_queue.add(taskid)
+            self.queue.put((taskid, FAILED))
 
     def next(self, timeout):
         """ Return an uncompleted tasks """

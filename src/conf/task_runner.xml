@@ -8,7 +8,7 @@
 
     <host>localhost</host>
 
-    <port>12113</port>
+    <port>25131</port>
 
     <tmpdir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/tmp</tmpdir>
 
