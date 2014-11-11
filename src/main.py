@@ -24,7 +24,7 @@ if __name__ == '__main__':
         'reducer': wordcount.reduce,
         'cnt_reducers': 1,
         'inputs': ['a.txt', 'b.txt'],
-        'output_dir': 'mytask1'
+        'output_dir': 'mytask3'
     }
     client.submit(jobconf2)
-    #client.submit(jobconf1)
+    client.submit(jobconf1)

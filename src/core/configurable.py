@@ -1,4 +1,5 @@
 import Pyro4
+from core.conf import PYRO_THREAD_POOL_SIZE
 
 class ValidationError(Exception):
     def __init__(self, msg):
@@ -17,6 +18,7 @@ class Configurable(object):
     def config_pyroNS(self):
         Pyro4.config.NS_HOST = self.pyroNS['host']
         Pyro4.config.NS_PORT = int(self.pyroNS['port'])
+        Pyro4.config.THREADPOOL_SIZE = PYRO_THREAD_POOL_SIZE
 
     def validate(self, conf):
         pass
