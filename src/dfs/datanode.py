@@ -35,8 +35,6 @@ def openfile(mode):
             elif not file_.mode in mode:
                 raise IOError('Cannot read and write a file at the same time')
 
-            self.files[filename] = file_
-
             return func(self, file_, *args)
         return wrapper
     return actual_decorator
@@ -83,21 +81,22 @@ class DataNode(Configurable):
         if filename in self.files:
             raise IOError('File %s already exists!' % filename)
 
-        self.namenode.create_file_meta(filename, self.name)
         self.files[filename] = open(real_fn, 'w')
 
     @synchronized_method('__lock__')
     def delete_file(self, filename):
         """ Delete file with given name on this data node """
         if not filename in self.files:
-            logging.warning('%s does not exist' % filename)
-            return
+            raise IOError('File %s does not exist' % filename)
 
         logging.info('deleting file %s' % filename)
-        self.namenode.delete_file_meta(filename)
 
         real_fn = self.real_filename(filename)
-        os.remove(real_fn)
+        try:
+            os.remove(real_fn)
+        except Exception as e:
+            logging.info('remove %s failed: %s' % (real_fn, e.message))
+
         del self.files[filename]
 
     @synchronized_method('__lock__')
@@ -126,7 +125,6 @@ class DataNode(Configurable):
     @synchronized_method('__lock__')
     @openfile('rw')
     def close_file(self, file_):
-        """ Close a file """
         file_.close()
 
     @synchronized_method('__lock__')
@@ -146,10 +144,5 @@ if __name__ == '__main__':
         'files',
         print_list(node.list_files),
         'get a list of all files')
-
-    cmd.register(
-        'delete',
-        node.delete_file,
-        'delete specified file')
 
     cmd.run()

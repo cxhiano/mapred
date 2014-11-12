@@ -18,7 +18,7 @@ TASK_RUNNER_TIMEOUT = 5
 JOB_RUNNER_TIMEOUT = 8
 
 # The number of records in a block when splitting input files
-RECORDS_PER_BLOCK = 100
+RECORDS_PER_BLOCK = 5
 
 # After this number of tasks failed, the job will be deemed as failed
 JOB_MAXIMUM_TASK_FAILURE = 20

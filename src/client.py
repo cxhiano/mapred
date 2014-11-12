@@ -16,17 +16,15 @@ class Client(Configurable):
         self.jobrunner.submit_job(serialize.dumps(job_conf))
 
     def upload(self, fname, local_file):
-        datanode = self.namenode.create_file(fname)
-        datanode.write_file(fname, 0, local_file.read())
-        datanode.close_file(fname)
+        self.namenode.create_file(fname)
+        self.namenode.write_file(fname, 0, local_file.read())
+        self.namenode.close_file(fname)
 
     def download(self, fname, local_file):
         bytes_read = 0
-        datanode = self.namenode.get_file(fname)
         while True:
-            buf = datanode.read_file(fname, bytes_read, 1024)
+            buf = self.namenode.read_file(fname, bytes_read, 1024)
             if nbytes == 0:
                 break
             local_file.write(buf)
             bytes_read += len(buf)
-        datanode.close_file(fname)

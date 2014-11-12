@@ -166,28 +166,25 @@ class Job(Configurable):
 
     def split_input(self):
         """ Split input files into blocks """
+        namenode = self.runner.namenode
         splitter = Splitter(RECORDS_PER_BLOCK)
         results = []
         input_files = []
         for fname in self.inputs:
-            input_files.append(RecordFile(fname, self.runner.namenode))
+            input_files.append(RecordFile(fname, namenode))
 
         taskid = 0
-        datanode = None
         for block in splitter.split(input_files):
             fname = map_input(self.id, taskid)
             taskid += 1
-            if datanode is None:
-                datanode = self.runner.namenode.create_file(fname)
-            else:
-                datanode.create_file(fname)
+            namenode.create_file(fname)
 
             bytes_written = 0
             for record in block:
-                bytes_written += datanode.write_file(fname, bytes_written,
+                bytes_written += namenode.write_file(fname, bytes_written,
                     record)
 
-            datanode.close_file(fname)
+            namenode.close_file(fname)
             results.append(fname)
             self.open_files.append(fname)
 
@@ -201,19 +198,16 @@ class Job(Configurable):
 
         All reducer output files and mapper output files will be created
         """
-        datanode = None
+        namenode = self.runner.namenode
         for i in range(self.cnt_reducers):
             fname = '%s.%s' % (self.output_dir, reduce_output(self.id, i))
-            if datanode is None:
-                datanode = self.runner.namenode.create_file(fname)
-            else:
-                datanode.create_file(fname)
+            namenode.create_file(fname)
             self.result_files.append(fname)
             self.open_files.append(fname)
 
             for j in range(self.cnt_mappers):
                 fname = map_output(self.id, j, i)
-                datanode.create_file(fname)
+                namenode.create_file(fname)
                 self.open_files.append(fname)
 
     def report_task_fail(self, taskid):

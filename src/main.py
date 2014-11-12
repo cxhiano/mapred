@@ -6,10 +6,8 @@ from utils.conf_loader import load_config
 if __name__ == '__main__':
     client = Client(load_config(sys.argv[1]))
 
-    '''
     client.upload('a.txt', open('client.py', 'r'))
     client.upload('b.txt', open('client.py', 'r'))
-    '''
 
     jobconf1 = {
         'mapper': wordcount.map,

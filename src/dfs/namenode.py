@@ -20,6 +20,12 @@ from utils.sync import synchronized_method
 from utils.rmi import *
 from utils.cmd import *
 
+def _random_pick(lst):
+    """ Randomly pick an object from the lst """
+
+    choice = random.randint(0, len(lst) - 1)
+    return lst[choice]
+
 class NameNode(Configurable):
     """ The name node of distributed file system
 
@@ -43,7 +49,6 @@ class NameNode(Configurable):
         """
         self.datanodes[datanode] = retrieve_object(self.ns, datanode)
         logging.info('receive report from %s' % datanode)
-        return True
 
     def start(self):
         """ Run name node in background.
@@ -64,60 +69,45 @@ class NameNode(Configurable):
         logging.info('%s started' % self.name)
 
     @synchronized_method('__lock__')
-    def create_file_meta(self, filename, datanode):
-        """ Create file meta data for given filename which corresponds to file
-        on the given datanode
-        """
-        if filename in self.files:
-            raise IOError('File already exists!')
-        self.files[filename] = datanode
-
-    @synchronized_method('__lock__')
-    def delete_file_meta(self, filename):
-        """ Delete file mete data for given filename """
-        if not filename in self.files:
-            raise IOError('File %s not found!' % filename)
-        del self.files[filename]
-
-    def create_file(self, filename, preference=None):
+    def create_file(self, filename):
         """ Create file with give filename
 
-        The parameter 'preference' when not None, indicate the name of data node
-        on which the file should be create. If 'preference' is None, the new
-        file will be created on a random datanode.
-
-        Return the data node on which the new file is created
+        According to REPLICATION_LEVEL, several replicas will be created in the
+        distributed file systems across data nodes. If the number of data nodes
+        if smaller than REPLICATION_LEVEL, the file creation will fail
         """
-        with self.__lock__:
-            if filename in self.files:
-                raise IOError('File %s already exists!' % filename)
+        if filename in self.files:
+            raise IOError('File %s already exists!' % filename)
 
-        logging.info('create file %s' % filename)
+        datanodes = self.datanodes.keys()
+        if len(datanodes) < REPLICATION_LEVEL:
+            raise IOError('Too few datanodes! Cannot create %d replicas' %
+                REPLICATION_LEVEL)
 
-        if preference is None:
-            n = len(self.datanodes)
-            if n == 0:
-                raise IOError('No data node available')
-                return
-            datanode = self.datanodes.values()[random.randint(0, n - 1)]
-        else:
-            datanode = self.datanodes.get(preference)
-            if datanode is None:
-                raise IOError('Preferred data node not exist')
-                return
+        replica_location = []
+        for i in range(REPLICATION_LEVEL):
+            while True:
+                nodename = _random_pick(datanodes)
+                if nodename not in replica_location:
+                    break
+            replica_location.append(nodename)
+            node = self.datanodes[nodename]
+            node.create_file(filename)
 
-        datanode.create_file(filename)
+        self.files[filename] = replica_location
+        logging.info('file %s created on %s' % (filename, str(replica_location)))
 
-        return datanode
-
+    @synchronized_method('__lock__')
     def delete_file(self, filename):
         """ Delete file with give filename """
-        with self.__lock__:
-            if not filename in self.files:
-                logging.info('%s does not exist' % filename)
-                return
+        if not filename in self.files:
+            raise IOError('File %s Not Found' % filename)
 
-        self.datanodes[self.files[filename]].delete_file(filename)
+        for nodename in self.files[filename]:
+            node = self.datanodes[nodename]
+            node.delete_file(filename)
+        del self.files[filename]
+        logging.info('file %s deleted' % filename)
 
     @synchronized_method('__lock__')
     def get_file(self, filename):
@@ -125,12 +115,53 @@ class NameNode(Configurable):
         if not filename in self.files:
             raise IOError('File %s Not Found' % filename)
 
-        return self.datanodes[self.files[filename]]
+        nodename = _random_pick(self.files[filename])
+        return self.datanodes[nodename]
+
+    @synchronized_method('__lock__')
+    def write_file(self, filename, offset, buf):
+        if not filename in self.files:
+            raise IOError('File %s Not Found' % filename)
+
+        for nodename in self.files[filename]:
+            node = self.datanodes[nodename]
+            node.write_file(filename, offset, buf)
+
+        return len(buf)
+
+    @synchronized_method('__lock__')
+    def read_file(self, filename, offset, nbytes):
+        if not filename in self.files:
+            raise IOError('File %s Not Found' % filename)
+
+        node = self.get_file(filename)
+        return node.read_file(filename, offset, nbytes)
+
+    @synchronized_method('__lock__')
+    def readline_file(self, filename, offset):
+        if not filename in self.files:
+            raise IOError('File %s Not Found' % filename)
+
+        node = self.get_file(filename)
+        return node.readline_file(filename, offset)
+
+    @synchronized_method('__lock__')
+    def close_file(self, filename):
+        if not filename in self.files:
+            raise IOError('File %s Not Found' % filename)
+
+        for nodename in self.files[filename]:
+            node = self.datanodes[nodename]
+            node.close_file(filename)
 
     @synchronized_method('__lock__')
     def list_files(self):
         """ Return a list of files on this distributed file system """
-        return self.files.keys()
+        ret = []
+        for fname in self.files:
+            ret.append('filename: %s\t replica locations: %s' %
+                (fname, ','.join(self.files[fname])))
+        return ret
 
     @synchronized_method('__lock__')
     def list_nodes(self):
@@ -142,18 +173,23 @@ class NameNode(Configurable):
         """ Check data nodes status, remove unhealthy data nodes and update
         file meta data
 
-        Files on unhealthy data nodes will be lost.
+        Replica on unhealthy data nodes will be lost and if all replicas a file
+        are lost, the file will be removed.
         """
-        for name in self.datanodes.keys():
-            datanode = self.datanodes[name]
+        for nodename in self.datanodes.keys():
+            datanode = self.datanodes[nodename]
             try:
                 datanode.heartbeat()
             except Exception as e:
-                del self.datanodes[name]
-                logging.info('data node %s died: %s', name, e.message)
+                del self.datanodes[nodename]
+                logging.info('data node %s died: %s', nodename, e.message)
                 for fname in self.files.keys():
-                    if self.files[fname] == name:
-                        del self.files[fname]
+                    replica_location = self.files[fname]
+                    if nodename in replica_location:
+                        replica_location.remove(nodename)
+                        if len(replica_location) == 0:
+                            logging.info('The last replica of %s lost' % fname)
+                            del self.files[fname]
 
     def healthcheck(self):
         """ Periodically check data nodes status """
