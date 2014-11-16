@@ -47,6 +47,8 @@ class DataNode(Configurable):
         self.config_pyroNS()
         self.files = {}
         self.__lock__ = threading.RLock()
+        if not os.path.exists(self.datadir):
+            os.makedirs(self.datadir)
 
     def start(self):
         """ Start running a data node in background.

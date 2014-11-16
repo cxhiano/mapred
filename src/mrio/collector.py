@@ -1,5 +1,4 @@
 from mrio.conf import *
-from mrio.outfile import MapperOutFile
 
 class OutputCollector:
     """ Collect output from map/reduce

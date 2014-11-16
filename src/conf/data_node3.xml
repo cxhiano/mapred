@@ -6,7 +6,7 @@
 
     <port>43255</port>
 
-    <datadir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/data/node3/</datadir>
+    <datadir>data3</datadir>
 
     <namenode>NameNode</namenode>
 
