@@ -1,5 +1,5 @@
 import sys
-import example.random_fail_wordcount as wordcount
+import example.wordcount as wordcount
 from client import Client
 from utils.conf_loader import load_config
 

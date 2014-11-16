@@ -10,7 +10,7 @@
 
     <port>25131</port>
 
-    <tmpdir>/Users/cxhiano/Dropbox/cmu/fall 2014/15640/mapred/tmp</tmpdir>
+    <tmpdir>tmp</tmpdir>
 
     <pyroNS>
         <host>localhost</host>

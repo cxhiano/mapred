@@ -4,7 +4,7 @@
 
     <host>localhost</host>
 
-    <port>43211</port>
+    <port>17778</port>
 
     <datadir>data2</datadir>
 
