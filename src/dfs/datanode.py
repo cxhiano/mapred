@@ -143,8 +143,8 @@ if __name__ == '__main__':
     cmd = CommandLine()
 
     cmd.register(
-        'files',
+        'ls',
         print_list(node.list_files),
-        'get a list of all files')
+        'list all files')
 
     cmd.run()

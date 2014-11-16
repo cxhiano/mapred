@@ -29,7 +29,7 @@ class ReduceTask(Task):
             os.mkdir(self.tmpdir)
         except OSError as e:
             logging.info('%s cannot create dir %s: %s' % (self.name, self.tmpdir,
-                e.message))
+                e))
 
         reduce_input = sort_files(self.inputs, self.tmpdir, self.namenode)
         logging.info('reduce task: sorting file done!')
