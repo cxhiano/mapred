@@ -16,6 +16,7 @@ class Configurable(object):
             setattr(self, attr, conf[attr])
 
     def config_pyroNS(self):
+        Pyro4.config.SOCK_REUSE = True
         Pyro4.config.NS_HOST = self.pyroNS['host']
         Pyro4.config.NS_PORT = int(self.pyroNS['port'])
         Pyro4.config.THREADPOOL_SIZE = PYRO_THREAD_POOL_SIZE

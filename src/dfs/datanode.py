@@ -72,7 +72,7 @@ class DataNode(Configurable):
         """ Convert a filename in distributed system to local file name where
         the actual file will be stored.
         """
-        return ''.join([self.datadir, filename])
+        return os.path.join(self.datadir, filename)
 
     @synchronized_method('__lock__')
     def create_file(self, filename):
