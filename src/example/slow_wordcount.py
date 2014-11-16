@@ -1,3 +1,4 @@
+"""A slower word count program, sleep for one second after each call of map/reduce"""
 def map(key, value, out):
     import time
 

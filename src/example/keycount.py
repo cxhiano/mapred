@@ -1,7 +1,8 @@
-"""Standard word count program"""
+"""Count python keywords"""
 def map(key, value, out):
+    from keyword import kwlist
     for word in value.split():
-        if len(word) > 0:
+        if word in kwlist:
             out.put(word, 1)
 
 def reduce(key, values, out):
