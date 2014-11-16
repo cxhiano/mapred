@@ -13,14 +13,17 @@ class Client(Configurable):
         Pyro4.config.SERIALIZER = 'marshal'
 
     def submit(self, job_conf):
+        '''Submit a job'''
         self.jobrunner.submit_job(serialize.dumps(job_conf))
 
     def upload(self, fname, local_file):
+        '''Upload a file to dfs'''
         self.namenode.create_file(fname)
         self.namenode.write_file(fname, 0, local_file.read())
         self.namenode.close_file(fname)
 
     def download(self, fname, local_file):
+        '''Download a file from dfs'''
         bytes_read = 0
         while True:
             buf = self.namenode.read_file(fname, bytes_read, 1024)
