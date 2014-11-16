@@ -15,7 +15,7 @@ class ReduceTask(Task):
         super(ReduceTask, self).__init__(task_conf)
 
         self.name = 'reduce task %d for job %d' % (self.taskid, self.jobid)
-        self.tmpdir = '%s/%s' % (self.tmpdir, reduce_input(self.jobid, self.taskid))
+        self.tmpdir = os.path.join(self.tmpdir, reduce_input(self.jobid, self.taskid))
         self.output_fname = '%s.%s' % (self.output_dir, reduce_output(self.jobid,
             self.taskid))
 
@@ -29,8 +29,8 @@ class ReduceTask(Task):
             if not os.path.exists(self.tmpdir):
                 os.makedirs(self.tmpdir)
         except OSError as e:
-            logging.info('%s cannot create dir %s: %s' % (self.name, self.tmpdir,
-                e))
+            logging.info('%s cannot create dir %s: %s' % (self.name,
+                self.tmpdir, e))
 
         reduce_input = sort_files(self.inputs, self.tmpdir, self.namenode)
         logging.info('reduce task: sorting file done!')
