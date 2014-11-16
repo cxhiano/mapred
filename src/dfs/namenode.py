@@ -210,7 +210,7 @@ if __name__ == '__main__':
     cmd.register(
         'rm',
         node.delete_file,
-        'remove specified file')
+        'remove a file by name')
 
     cmd.register(
         'nodes',

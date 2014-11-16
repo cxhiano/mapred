@@ -145,6 +145,6 @@ if __name__ == '__main__':
     cmd.register(
         'ls',
         print_list(node.list_files),
-        'list all files')
+        'list files on this node')
 
     cmd.run()

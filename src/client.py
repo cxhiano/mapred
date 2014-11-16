@@ -13,7 +13,15 @@ class Client(Configurable):
         Pyro4.config.SERIALIZER = 'marshal'
 
     def submit(self, job_conf):
-        '''Submit a job'''
+        '''Submit a job
+
+        Example job_conf:
+            'mapper': <module name of mapper>,
+            'reducer': <module name of reducer>,
+            'cnt_reducers': <integer>,
+            'inputs': <list of input names>,
+            'output_dir': <output directory name>
+        '''
         self.jobrunner.submit_job(serialize.dumps(job_conf))
 
     def upload(self, fname, local_file):
