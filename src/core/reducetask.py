@@ -26,7 +26,8 @@ class ReduceTask(Task):
         input files and feed records to reducer
         """
         try:
-            os.mkdir(self.tmpdir)
+            if not os.path.exists(self.tmpdir):
+                os.makedirs(self.tmpdir)
         except OSError as e:
             logging.info('%s cannot create dir %s: %s' % (self.name, self.tmpdir,
                 e))
