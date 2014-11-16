@@ -39,7 +39,7 @@ class TaskTracker(object):
             self.message.put(COMPLETE)
         except Exception as e:
             logging.info('Error when running %s: %s' % (self.task.name,
-                e.message))
+                e))
             self.message.put(FAILED)
 
     def kill_task(self):
