@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jobrunner>
-    <name>TaskRunner</name>
+    <name>TaskRunner2</name>
 
     <jobrunner>JobRunner</jobrunner>
 
@@ -8,9 +8,9 @@
 
     <host>localhost</host>
 
-    <port>18888</port>
+    <port>18889</port>
 
-    <tmpdir>tmp</tmpdir>
+    <tmpdir>tmp2</tmpdir>
 
     <pyroNS>
         <host>localhost</host>
