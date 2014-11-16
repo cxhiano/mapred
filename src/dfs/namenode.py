@@ -215,6 +215,6 @@ if __name__ == '__main__':
     cmd.register(
         'nodes',
         print_list(node.list_nodes),
-        'get a list of all data nodes')
+        'list all data nodes')
 
     cmd.run()
